@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================
+// ПОЛЬЗОВАТЕЛИ И АВТОРИЗАЦИЯ
+// =============================================
+
+enum UserRole {
+  OWNER    // Владелец школы/салона
+  MANAGER  // Руководитель
+  ADMIN    // Тестируемый администратор
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(ADMIN)
+  salonName     String?
+  phone         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Связи авторизации
+  accounts Account[]
+  sessions Session[]
+
+  // Рабочие связи
+  managedAdmins User[]   @relation("ManagerAdmins")
+  manager       User?    @relation("ManagerAdmins", fields: [managerId], references: [id])
+  managerId     String?
+
+  // Контент пользователя
+  callAnalyses   CallAnalysis[]
+  chatAnalyses   ChatAnalysis[]
+  testResults    TestResult[]
+  adminCards     AdminCard[]
+  salonSettings  SalonSettings?
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// =============================================
+// АНАЛИЗ ЗВОНКОВ
+// =============================================
+
+enum AnalysisStatus {
+  PENDING
+  TRANSCRIBING
+  ANALYZING
+  COMPLETED
+  FAILED
+}
+
+model CallAnalysis {
+  id              String         @id @default(cuid())
+  userId          String
+  adminName       String?        // Имя анализируемого администратора
+  title           String?        // Название/описание звонка
+  audioUrl        String?        // Путь к файлу
+  audioFileName   String?
+  duration        Int?           // Длительность в секундах
+  transcription   String?        @db.Text
+  speakerLabels   Json?          // Разметка реплик по спикерам
+  status          AnalysisStatus @default(PENDING)
+  overallScore    Float?
+  analysisResult  Json?          // Полный результат AI анализа
+  stageScores     Json?          // Оценки по этапам
+  errorMessage    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("call_analyses")
+}
+
+// =============================================
+// АНАЛИЗ ПЕРЕПИСОК
+// =============================================
+
+enum ChatSource {
+  WHATSAPP
+  TELEGRAM
+  INSTAGRAM
+  TEXT
+  SCREENSHOT
+}
+
+model ChatAnalysis {
+  id             String         @id @default(cuid())
+  userId         String
+  adminName      String?
+  title          String?
+  source         ChatSource     @default(TEXT)
+  rawText        String?        @db.Text // Оригинальный текст переписки
+  processedText  String?        @db.Text // После OCR обработки
+  imageUrls      String[]       // Пути к скриншотам
+  status         AnalysisStatus @default(PENDING)
+  overallScore   Float?
+  analysisResult Json?
+  stageScores    Json?
+  errorMessage   String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_analyses")
+}
+
+// =============================================
+// ТЕСТИРОВАНИЕ
+// =============================================
+
+enum TestType {
+  PRACTICAL_CASE
+  ROLEPLAY
+  PRODUCT_KNOWLEDGE
+  CRM_KNOWLEDGE
+}
+
+model TestResult {
+  id             String   @id @default(cuid())
+  userId         String
+  testType       TestType
+  caseId         String?  // Ссылка на кейс или продукт
+  inputText      String?  @db.Text // Текстовый ответ
+  audioUrl       String?  // Аудио ответ
+  score          Float?
+  fearLevel      String?  // Уровень страха звонков (для ролевых)
+  analysisResult Json?    // Полный AI анализ
+  feedback       String?  @db.Text
+  weakAreas      String[] // Слабые места
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testCase PracticalCase? @relation(fields: [caseId], references: [id])
+
+  @@map("test_results")
+}
+
+// =============================================
+// НАСТРОЙКИ САЛОНА
+// =============================================
+
+model SalonSettings {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  salonName   String?
+  logoUrl     String?
+  primaryColor String?  @default("#E8A0BF")
+  modules     Json?    // Включённые/выключенные модули
+  scoringWeights Json? // Веса критериев оценки
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products Product[]
+  scripts  SalesScript[]
+  cases    PracticalCase[]
+  roleplayScenarios RoleplayScenario[]
+  crmQuestions CRMQuestion[]
+
+  @@map("salon_settings")
+}
+
+// Продукты/услуги (для ХПВ-теста)
+model Product {
+  id              String   @id @default(cuid())
+  salonSettingsId String
+  name            String
+  category        String?
+  characteristics String   @db.Text // Характеристики
+  advantages      String   @db.Text // Преимущества
+  benefits        String   @db.Text // Выгоды для клиента
+  price           Float?
+  targetAudience  String?  @db.Text
+  objections      Json?    // Частые возражения и ответы
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  salonSettings SalonSettings @relation(fields: [salonSettingsId], references: [id], onDelete: Cascade)
+
+  @@map("products")
+}
+
+// Скрипты продаж
+model SalesScript {
+  id              String   @id @default(cuid())
+  salonSettingsId String
+  title           String
+  description     String?
+  content         String   @db.Text // Эталонный скрипт
+  stage           String?  // Этап продаж
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  salonSettings SalonSettings @relation(fields: [salonSettingsId], references: [id], onDelete: Cascade)
+
+  @@map("sales_scripts")
+}
+
+// Практические кейсы
+model PracticalCase {
+  id              String   @id @default(cuid())
+  salonSettingsId String
+  title           String
+  description     String   @db.Text
+  scenario        String   @db.Text // Описание ситуации
+  expectedOutcome String?  @db.Text // Ожидаемый результат
+  difficulty      Int      @default(1) // 1-3
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  salonSettings SalonSettings @relation(fields: [salonSettingsId], references: [id], onDelete: Cascade)
+  testResults   TestResult[]
+
+  @@map("practical_cases")
+}
+
+// Сценарии ролевых игр
+model RoleplayScenario {
+  id              String   @id @default(cuid())
+  salonSettingsId String
+  title           String
+  clientPhrase    String   @db.Text // Фраза клиента
+  context         String?  @db.Text // Контекст ситуации
+  difficulty      Int      @default(1)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  salonSettings SalonSettings @relation(fields: [salonSettingsId], references: [id], onDelete: Cascade)
+
+  @@map("roleplay_scenarios")
+}
+
+// Вопросы CRM теста
+model CRMQuestion {
+  id              String   @id @default(cuid())
+  salonSettingsId String
+  question        String   @db.Text
+  expectedAnswer  String?  @db.Text
+  category        String?  // Категория (запись, пропущенные, спящие, предпочтения)
+  order           Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  salonSettings SalonSettings @relation(fields: [salonSettingsId], references: [id], onDelete: Cascade)
+
+  @@map("crm_questions")
+}
+
+// =============================================
+// КАРТОЧКА АДМИНИСТРАТОРА
+// =============================================
+
+model AdminCard {
+  id             String   @id @default(cuid())
+  userId         String
+  adminName      String
+  salonName      String?
+  overallScore   Float?
+  skills         Json     // Массив навыков с оценками
+  callSummary    Json?    // Сводка по звонкам
+  chatSummary    Json?    // Сводка по перепискам
+  testSummary    Json?    // Сводка по тестам
+  developmentPlan Json?  // План развития
+  isShared       Boolean  @default(false)
+  shareToken     String?  @unique
+  pdfUrl         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_cards")
+}

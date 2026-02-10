@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 25% 98%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 17 76% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 158 52% 35%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 30 20% 95%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 30 20% 92%;
+    --accent-foreground: 0 0% 15%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 15% 88%;
+    --input: 30 15% 88%;
+    --ring: 17 76% 56%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-serif, Georgia, serif);
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* Карточка с градиентным акцентом */
+  .card-brand {
+    @apply bg-white rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow;
+  }
+
+  /* Шапка секции в стиле бренда */
+  .section-header-orange {
+    @apply bg-gradient-to-br from-brand-orange to-brand-orange-light text-white rounded-2xl p-6 mb-6;
+  }
+  .section-header-green {
+    @apply bg-gradient-to-br from-brand-green to-brand-green-light text-white rounded-2xl p-6 mb-6;
+  }
+
+  /* Бейдж оценки */
+  .score-badge {
+    @apply inline-flex items-center justify-center rounded-full font-bold text-sm w-10 h-10;
+  }
+  .score-critical { @apply bg-red-100 text-red-700; }
+  .score-warning  { @apply bg-orange-100 text-orange-700; }
+  .score-medium   { @apply bg-yellow-100 text-yellow-700; }
+  .score-good     { @apply bg-green-100 text-green-700; }
+
+  /* Анимация появления */
+  .fade-in {
+    @apply animate-fade-in;
+  }
+
+  /* Навигационный элемент */
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium
+           text-muted-foreground hover:text-foreground hover:bg-accent
+           transition-all duration-150;
+  }
+  .nav-item-active {
+    @apply bg-brand-orange-bg text-brand-orange font-semibold;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { @apply bg-muted rounded-full; }
+::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+/* Prose для AI ответов */
+.prose-analysis h2 { @apply text-lg font-semibold text-foreground mt-6 mb-3; }
+.prose-analysis h3 { @apply text-base font-semibold text-foreground mt-4 mb-2; }
+.prose-analysis p  { @apply text-sm text-muted-foreground leading-relaxed mb-3; }
+.prose-analysis ul { @apply space-y-1 mb-3; }
+.prose-analysis li { @apply text-sm text-muted-foreground flex gap-2; }
+.prose-analysis li::before { content: "•"; @apply text-brand-orange font-bold flex-shrink-0; }
