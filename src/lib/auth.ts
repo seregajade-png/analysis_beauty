@@ -38,24 +38,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Пароль", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        const email = String(credentials?.email ?? "").trim();
+        const password = String(credentials?.password ?? "");
+        if (!email || !password) return null;
 
         let user;
         try {
           user = await prisma.user.findUnique({
-            where: { email: credentials.email as string },
+            where: { email },
           });
         } catch (err) {
           console.error("[AUTH] DB error:", err);
           return null;
         }
 
-        console.log("[AUTH] user found:", !!user, "email:", credentials.email);
-
         if (!user || !user.password) return null;
 
-        const hashedInput = hashPassword(credentials.password as string);
-        console.log("[AUTH] hash match:", hashedInput === user.password);
+        const hashedInput = hashPassword(password);
         if (hashedInput !== user.password) return null;
 
         return {
