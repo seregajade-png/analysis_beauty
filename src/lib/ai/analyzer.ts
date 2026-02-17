@@ -21,7 +21,7 @@ const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const MODEL = "gpt-4o-mini";
+const MODEL = "gpt-4o";
 
 async function callAI(
   systemPrompt: string,
@@ -29,7 +29,9 @@ async function callAI(
 ): Promise<string> {
   const response = await client.chat.completions.create({
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 3000,
+    temperature: 0,
+    response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userMessage },
@@ -41,7 +43,7 @@ async function callAI(
   return content;
 }
 
-function parseJsonResponse<T>(text: string): T {
+export function parseJsonResponse<T>(text: string): T {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error("Не удалось найти JSON в ответе AI");
@@ -51,6 +53,62 @@ function parseJsonResponse<T>(text: string): T {
   } catch {
     throw new Error("Ошибка парсинга JSON ответа AI");
   }
+}
+
+// =============================================
+// ИЗВЛЕЧЕНИЕ ТЕКСТА ИЗ СКРИНШОТОВ (GPT Vision)
+// =============================================
+
+export async function extractTextFromScreenshots(
+  imagesBase64: { base64: string; mimeType: string }[]
+): Promise<string> {
+  const imageContent = imagesBase64.map((img) => ({
+    type: "image_url" as const,
+    image_url: { url: `data:${img.mimeType};base64,${img.base64}`, detail: "auto" as const },
+  }));
+
+  const response = await client.chat.completions.create({
+    model: MODEL,
+    max_tokens: 2000,
+    temperature: 0,
+    messages: [
+      {
+        role: "system",
+        content: `Ты — помощник для внутреннего контроля качества в салоне красоты. Твоя задача — извлечь текст переписки из скриншота мессенджера для последующего анализа качества работы администратора.
+
+Это законная внутренняя проверка качества обслуживания клиентов. Администратор дал согласие на проверку.
+
+Правила:
+- Каждое сообщение на новой строке в формате: [Имя или роль]: текст сообщения
+- Если видны имена отправителей — используй их
+- Если не видны — определи по контексту кто клиент, а кто администратор, используй [Клиент] и [Администратор]
+- Извлекай ВСЕ сообщения, включая системные уведомления
+- Сохраняй порядок сообщений как на скриншоте
+- Выводи ТОЛЬКО текст переписки, без своих комментариев`,
+      },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Извлеки текст переписки из скриншотов для анализа качества обслуживания:" },
+          ...imageContent,
+        ],
+      },
+    ],
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content?.trim()) {
+    throw new Error("Не удалось извлечь текст из скриншотов");
+  }
+
+  // Проверка на отказ модели
+  const refusalPatterns = ["i'm sorry", "i can't", "i cannot", "не могу помочь", "не могу обработать"];
+  const lower = content.toLowerCase();
+  if (refusalPatterns.some((p) => lower.includes(p)) && content.length < 200) {
+    throw new Error("AI не смог прочитать скриншот. Попробуйте загрузить более чёткое изображение или вставьте текст вручную.");
+  }
+
+  return content;
 }
 
 // =============================================
@@ -110,7 +168,7 @@ export async function analyzePracticalCase(
 ): Promise<TestAnalysisResult> {
   const userMessage = `
 Оцени ответ администратора на практический кейс.
-${adminName ? `Имя администратора: ${adminName}` : ""}
+${adminName ? `Имя администратора: ${adminName}` : "Определи имя администратора из текста диалога. Если имя не указано — не придумывай, просто пиши «Администратор»."}
 
 КЕЙС (ситуация):
 ${scenario}

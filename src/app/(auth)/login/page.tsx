@@ -32,24 +32,24 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-cream flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Логотип / заголовок */}
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md animate-fade-in">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-orange to-brand-orange-light mb-4 shadow-lg">
-            <span className="text-2xl">✦</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4 shadow-lg">
+            <span className="text-2xl text-secondary">✦</span>
           </div>
-          <h1 className="text-2xl font-bold text-brand-dark tracking-tight">
-            Beauty Call Analyzer
+          <h1 className="text-2xl font-heading font-bold text-foreground tracking-tight">
+            BeautyChief
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             Платформа диагностики администраторов
           </p>
         </div>
 
-        {/* Форма */}
+        {/* Form */}
         <div className="bg-white rounded-2xl shadow-sm border border-border p-8">
-          <h2 className="text-lg font-semibold text-brand-dark mb-6">
+          <h2 className="text-lg font-heading font-semibold text-foreground mb-6">
             Войти в систему
           </h2>
 
@@ -64,9 +64,7 @@ function LoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@beauty-school.ru"
                 required
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange
-                           transition-all"
+                className="w-full px-4 py-2.5 rounded-lg border border-input bg-card text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
@@ -80,14 +78,12 @@ function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm
-                           focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange
-                           transition-all"
+                className="w-full px-4 py-2.5 rounded-lg border border-input bg-card text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm animate-fade-in">
                 <span>⚠</span>
                 {error}
               </div>
@@ -96,10 +92,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 rounded-xl bg-brand-orange hover:bg-brand-orange-dark
-                         text-white font-semibold text-sm transition-all
-                         disabled:opacity-50 disabled:cursor-not-allowed
-                         shadow-sm hover:shadow-md"
+              className="w-full btn-primary py-3"
             >
               {loading ? "Вход..." : "Войти"}
             </button>
@@ -110,15 +103,15 @@ function LoginForm() {
               Тестовые аккаунты:
             </p>
             <div className="space-y-1.5 text-xs text-muted-foreground">
-              <div className="flex justify-between px-3 py-1.5 bg-muted rounded-lg">
+              <div className="flex justify-between px-3 py-1.5 bg-muted/50 rounded-lg">
                 <span className="font-medium">Владелец</span>
                 <span>owner@beauty-school.ru / password123</span>
               </div>
-              <div className="flex justify-between px-3 py-1.5 bg-muted rounded-lg">
+              <div className="flex justify-between px-3 py-1.5 bg-muted/50 rounded-lg">
                 <span className="font-medium">Менеджер</span>
                 <span>manager@beauty-school.ru / password123</span>
               </div>
-              <div className="flex justify-between px-3 py-1.5 bg-muted rounded-lg">
+              <div className="flex justify-between px-3 py-1.5 bg-muted/50 rounded-lg">
                 <span className="font-medium">Администратор</span>
                 <span>admin@beauty-school.ru / password123</span>
               </div>
@@ -127,7 +120,7 @@ function LoginForm() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          © 2025 Beauty Call Analyzer
+          © 2025 BeautyChief
         </p>
       </div>
     </div>
@@ -136,7 +129,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-brand-cream flex items-center justify-center"><div className="animate-spin text-2xl">⟳</div></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-spin text-2xl text-primary">⟳</div></div>}>
       <LoginForm />
     </Suspense>
   );

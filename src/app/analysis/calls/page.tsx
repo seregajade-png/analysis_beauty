@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { formatScore, getScoreBg, getScoreLabel, formatDateTime } from "@/lib/utils";
+import { Upload, FileAudio, Loader2 } from "lucide-react";
 import type { CallAnalysisResult, SalesStage } from "@/types";
 
 interface AnalysisRecord {
@@ -95,26 +96,26 @@ export default function CallsPage() {
   const displayAnalysis = selectedAnalysis ?? result;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-brand-dark flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-orange to-brand-orange-light flex items-center justify-center text-white">☎</span>
+    <div className="max-w-6xl mx-auto">
+      {/* Hero Banner */}
+      <div className="hero-banner rounded-2xl mb-8 relative z-0">
+        <h1 className="heading-display text-3xl lg:text-4xl text-foreground relative z-10">
           Анализ звонков
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="mt-2 text-base text-muted-foreground relative z-10">
           Загрузите аудиозапись — AI транскрибирует и детально разберёт каждый этап продажи
         </p>
       </div>
 
       {/* Табы */}
-      <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit mb-6">
+      <div className="flex gap-1 p-1 bg-muted rounded-pill w-fit mb-6">
         {(["upload", "history"] as const).map((t) => (
           <button
             key={t}
             onClick={() => { setTab(t); if (t === "history") loadHistory(); }}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`px-5 py-2.5 rounded-pill text-sm font-medium transition-all ${
               tab === t
-                ? "bg-white text-brand-orange shadow-sm"
+                ? "bg-card text-primary shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -130,19 +131,25 @@ export default function CallsPage() {
             {/* Dropzone */}
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+              className={`card-salon border-2 border-dashed p-8 text-center cursor-pointer transition-all ${
                 isDragActive
-                  ? "border-brand-orange bg-brand-orange-bg"
+                  ? "border-primary bg-mint/30"
                   : file
-                  ? "border-brand-green bg-brand-green-bg"
-                  : "border-border hover:border-brand-orange/50 hover:bg-brand-orange-bg/50"
+                  ? "border-primary bg-mint/20"
+                  : "border-accent hover:border-primary/50 hover:bg-mint/10"
               }`}
             >
               <input {...getInputProps()} />
-              <div className="text-4xl mb-3">{file ? "✓" : "☁"}</div>
+              <div className="mb-3">
+                {file ? (
+                  <FileAudio size={32} className="mx-auto text-primary" />
+                ) : (
+                  <Upload size={32} className="mx-auto text-accent" />
+                )}
+              </div>
               {file ? (
                 <div>
-                  <p className="font-medium text-brand-green text-sm">{file.name}</p>
+                  <p className="font-medium text-primary text-sm">{file.name}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {(file.size / 1024 / 1024).toFixed(1)} МБ
                   </p>
@@ -169,7 +176,7 @@ export default function CallsPage() {
                   value={adminName}
                   onChange={(e) => setAdminName(e.target.value)}
                   placeholder="Анна Иванова"
-                  className="w-full px-3 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange"
+                  className="w-full px-4 py-2.5 rounded-lg border border-input bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
               <div>
@@ -180,7 +187,7 @@ export default function CallsPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Входящий звонок, 15 янв"
-                  className="w-full px-3 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange"
+                  className="w-full px-4 py-2.5 rounded-lg border border-input bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
             </div>
@@ -188,15 +195,15 @@ export default function CallsPage() {
             <button
               onClick={handleAnalyze}
               disabled={!file || loading}
-              className="w-full py-3 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold text-sm transition-all disabled:opacity-40 shadow-sm hover:shadow-md"
+              className="w-full btn-primary-salon flex items-center justify-center gap-2"
             >
+              {loading && <Loader2 size={16} className="animate-spin" />}
               {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="animate-spin">⟳</span>
+                <>
                   {step === "uploading" && "Загрузка..."}
                   {step === "transcribing" && "Транскрипция..."}
                   {step === "analyzing" && "AI анализирует..."}
-                </span>
+                </>
               ) : (
                 "Анализировать звонок"
               )}
@@ -210,15 +217,15 @@ export default function CallsPage() {
                     <div
                       className={`w-5 h-5 rounded-full flex items-center justify-center text-xs
                         ${["uploading", "transcribing", "analyzing"].indexOf(step) > i
-                          ? "bg-brand-green text-white"
+                          ? "bg-primary text-primary-foreground"
                           : step === s
-                          ? "bg-brand-orange text-white animate-pulse-soft"
+                          ? "bg-secondary text-secondary-foreground animate-pulse-soft"
                           : "bg-muted text-muted-foreground"
                         }`}
                     >
                       {["uploading", "transcribing", "analyzing"].indexOf(step) > i ? "✓" : i + 1}
                     </div>
-                    <span className={step === s ? "text-brand-orange font-medium" : "text-muted-foreground"}>
+                    <span className={step === s ? "text-secondary font-medium" : "text-muted-foreground"}>
                       {s === "uploading" && "Загрузка файла"}
                       {s === "transcribing" && "Транскрипция (Whisper AI)"}
                       {s === "analyzing" && "AI анализ звонка"}
@@ -234,9 +241,9 @@ export default function CallsPage() {
             {displayAnalysis?.analysisResult ? (
               <AnalysisResult data={displayAnalysis.analysisResult} />
             ) : (
-              <div className="h-full flex items-center justify-center text-center p-12 bg-muted/30 rounded-2xl border border-dashed border-border">
+              <div className="h-full flex items-center justify-center text-center p-12 card-salon border-2 border-dashed border-accent">
                 <div>
-                  <div className="text-5xl mb-4 opacity-30">◎</div>
+                  <Upload size={48} className="mx-auto text-accent/50 mb-4" />
                   <p className="text-muted-foreground text-sm">
                     Загрузите аудиофайл и нажмите «Анализировать»
                   </p>
@@ -259,10 +266,10 @@ export default function CallsPage() {
                 <button
                   key={item.id}
                   onClick={() => { setSelectedId(item.id); loadAnalysis(item.id); }}
-                  className={`w-full text-left p-4 rounded-xl border transition-all ${
+                  className={`w-full text-left p-4 rounded-lg border transition-all ${
                     selectedId === item.id
-                      ? "border-brand-orange bg-brand-orange-bg"
-                      : "border-border bg-white hover:border-brand-orange/50"
+                      ? "border-primary bg-mint/20"
+                      : "card-salon hover:border-primary/50"
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -291,7 +298,7 @@ export default function CallsPage() {
             {selectedAnalysis?.analysisResult ? (
               <AnalysisResult data={selectedAnalysis.analysisResult} />
             ) : (
-              <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
+              <div className="flex items-center justify-center h-64 text-muted-foreground text-sm card-salon">
                 Выберите запись из списка
               </div>
             )}
@@ -308,26 +315,28 @@ function AnalysisResult({ data }: { data: CallAnalysisResult }) {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Общая оценка */}
-      <div className={`p-5 rounded-2xl border ${getScoreBg(data.overallScore)}`}>
+      <div className={`p-5 rounded-lg border ${getScoreBg(data.overallScore)}`}>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider opacity-70">Общая оценка</p>
-            <p className="text-4xl font-bold mt-1">{data.overallScore}<span className="text-xl">/10</span></p>
+            <p className="text-4xl font-heading font-bold mt-1">{data.overallScore}<span className="text-xl">/10</span></p>
             <p className="text-sm font-medium mt-0.5">{getScoreLabel(data.overallScore)}</p>
           </div>
-          <div className="text-5xl opacity-20">☎</div>
+          <div className="w-14 h-14 rounded-full bg-mint flex items-center justify-center">
+            <Phone size={24} className="text-primary" />
+          </div>
         </div>
         <p className="text-sm mt-3 opacity-80">{data.summary}</p>
       </div>
 
       {/* Внутренние табы */}
-      <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
+      <div className="flex gap-1 p-1 bg-muted rounded-pill w-fit">
         {(["overview", "stages", "plan"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setActiveTab(t)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              activeTab === t ? "bg-white text-brand-orange shadow-sm" : "text-muted-foreground"
+            className={`px-4 py-2 rounded-pill text-xs font-medium transition-all ${
+              activeTab === t ? "bg-card text-primary shadow-sm" : "text-muted-foreground"
             }`}
           >
             {t === "overview" ? "Обзор" : t === "stages" ? "Этапы" : "План развития"}
@@ -337,16 +346,15 @@ function AnalysisResult({ data }: { data: CallAnalysisResult }) {
 
       {activeTab === "overview" && (
         <div className="space-y-4">
-          {/* Сильные стороны */}
           {data.strengths?.length > 0 && (
-            <div className="card-brand p-4">
-              <h3 className="text-sm font-semibold text-brand-green mb-3 flex items-center gap-2">
-                <span>✦</span> Сильные стороны
+            <div className="card-salon p-5">
+              <h3 className="text-sm font-heading font-semibold text-primary mb-3 flex items-center gap-2">
+                Сильные стороны
               </h3>
               <ul className="space-y-1.5">
                 {data.strengths.map((s, i) => (
                   <li key={i} className="text-sm text-foreground flex gap-2">
-                    <span className="text-brand-green mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-primary mt-0.5 flex-shrink-0">✓</span>
                     {s}
                   </li>
                 ))}
@@ -354,23 +362,22 @@ function AnalysisResult({ data }: { data: CallAnalysisResult }) {
             </div>
           )}
 
-          {/* Критические ошибки */}
           {data.criticalErrors?.length > 0 && (
-            <div className="card-brand p-4">
-              <h3 className="text-sm font-semibold text-red-600 mb-3 flex items-center gap-2">
-                <span>⚠</span> Критические ошибки
+            <div className="card-salon p-5">
+              <h3 className="text-sm font-heading font-semibold text-destructive mb-3 flex items-center gap-2">
+                Критические ошибки
               </h3>
               <div className="space-y-3">
                 {data.criticalErrors.map((err, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-red-50 border border-red-100 space-y-2">
+                  <div key={i} className="p-3 rounded-lg bg-destructive/5 border border-destructive/10 space-y-2">
                     {err.timecode && (
-                      <span className="text-xs font-mono bg-red-200 text-red-800 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-mono bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">
                         [{err.timecode}]
                       </span>
                     )}
                     <div className="text-xs">
-                      <p className="text-red-800 font-medium">«{err.originalPhrase}»</p>
-                      <p className="text-muted-foreground mt-1">→ <span className="text-green-700 font-medium">{err.recommendation}</span></p>
+                      <p className="text-destructive font-medium">«{err.originalPhrase}»</p>
+                      <p className="text-muted-foreground mt-1">→ <span className="text-primary font-medium">{err.recommendation}</span></p>
                       <p className="text-muted-foreground mt-1 italic">{err.reason}</p>
                     </div>
                   </div>
@@ -379,13 +386,12 @@ function AnalysisResult({ data }: { data: CallAnalysisResult }) {
             </div>
           )}
 
-          {/* Слова-паразиты */}
           {(data.parasiteWords?.length ?? 0) > 0 && (
-            <div className="card-brand p-4">
-              <h3 className="text-sm font-semibold text-orange-600 mb-2">Слова-паразиты</h3>
+            <div className="card-salon p-5">
+              <h3 className="text-sm font-heading font-semibold text-secondary mb-2">Слова-паразиты</h3>
               <div className="flex flex-wrap gap-2">
                 {(data.parasiteWords ?? []).map((w, i) => (
-                  <span key={i} className="px-2 py-1 rounded-lg bg-orange-50 border border-orange-200 text-xs text-orange-700 font-medium">
+                  <span key={i} className="px-2.5 py-1 rounded-pill bg-muted border border-border text-xs text-foreground font-medium">
                     {w}
                   </span>
                 ))}
@@ -404,20 +410,20 @@ function AnalysisResult({ data }: { data: CallAnalysisResult }) {
       )}
 
       {activeTab === "plan" && (
-        <div className="card-brand p-4">
-          <h3 className="text-sm font-semibold text-brand-dark mb-4 flex items-center gap-2">
-            <span className="text-brand-orange">◈</span> План развития
+        <div className="card-salon p-5">
+          <h3 className="text-sm font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
+            План развития
           </h3>
           <div className="space-y-3">
             {data.developmentPlan?.map((item, i) => (
-              <div key={i} className="flex gap-3 p-3 rounded-xl bg-muted">
-                <span className="w-6 h-6 rounded-full bg-brand-orange text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+              <div key={i} className="flex gap-3 p-3 rounded-lg bg-muted">
+                <span className="w-6 h-6 rounded-full bg-secondary text-secondary-foreground text-xs font-bold flex items-center justify-center flex-shrink-0">
                   {item.priority}
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground">{item.skill}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{item.action}</p>
-                  <p className="text-xs text-brand-orange font-medium mt-1">⏱ {item.deadline}</p>
+                  <p className="text-xs text-secondary font-medium mt-1">{item.deadline}</p>
                 </div>
               </div>
             ))}
@@ -431,7 +437,7 @@ function AnalysisResult({ data }: { data: CallAnalysisResult }) {
 function StageCard({ stage }: { stage: SalesStage }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`card-brand overflow-hidden`}>
+    <div className="card-salon overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between p-4"
@@ -448,9 +454,9 @@ function StageCard({ stage }: { stage: SalesStage }) {
         <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
           <p className="text-sm text-muted-foreground">{stage.comment}</p>
           {stage.issues?.map((issue, i) => (
-            <div key={i} className="p-3 rounded-xl bg-red-50 border border-red-100 text-xs space-y-1">
-              <p className="text-red-800 font-medium">«{issue.originalPhrase}»</p>
-              <p className="text-green-700">→ {issue.recommendation}</p>
+            <div key={i} className="p-3 rounded-lg bg-destructive/5 border border-destructive/10 text-xs space-y-1">
+              <p className="text-destructive font-medium">«{issue.originalPhrase}»</p>
+              <p className="text-primary">→ {issue.recommendation}</p>
               <p className="text-muted-foreground italic">{issue.reason}</p>
             </div>
           ))}

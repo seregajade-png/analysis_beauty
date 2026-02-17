@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { formatScore, getScoreBg, getScoreLabel, formatDateTime } from "@/lib/utils";
+import { getScoreBg, getScoreLabel } from "@/lib/utils";
 import type { ChatAnalysisResult } from "@/types";
 
 const SOURCE_OPTIONS = [
@@ -22,6 +22,7 @@ export default function ChatsPage() {
   const [images, setImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ analysis: unknown; result: ChatAnalysisResult } | null>(null);
+  const [error, setError] = useState("");
 
   const onDrop = useCallback((accepted: File[]) => {
     setImages((prev) => [...prev, ...accepted]);
@@ -34,7 +35,11 @@ export default function ChatsPage() {
   });
 
   async function handleAnalyze() {
-    if (!chatText.trim() && images.length === 0) return;
+    if (mode === "text" && !chatText.trim()) return;
+    if (mode === "screenshot" && images.length === 0) return;
+
+    setResult(null);
+    setError("");
     setLoading(true);
 
     try {
@@ -46,11 +51,17 @@ export default function ChatsPage() {
       images.forEach((img) => fd.append("images", img));
 
       const res = await fetch("/api/chats/analyze", { method: "POST", body: fd });
-      if (!res.ok) throw new Error();
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Ошибка запроса: " + res.status);
+      }
+
       const data = await res.json();
-      setResult(data);
-    } catch {
-      alert("Ошибка анализа");
+      setResult({ analysis: data.analysis, result: data.result });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -59,8 +70,8 @@ export default function ChatsPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-brand-dark flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-brand-green-light flex items-center justify-center text-white">✉</span>
+        <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
+          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">✉</span>
           Анализ переписок
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
@@ -83,8 +94,8 @@ export default function ChatsPage() {
                   onClick={() => setSource(opt.value)}
                   className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-xs transition-all ${
                     source === opt.value
-                      ? "border-brand-green bg-brand-green-bg text-brand-green font-semibold"
-                      : "border-border text-muted-foreground hover:border-brand-green/50"
+                      ? "border-primary bg-mint/20 text-primary font-semibold"
+                      : "border-border text-muted-foreground hover:border-primary/50"
                   }`}
                 >
                   <span>{opt.icon}</span>
@@ -99,8 +110,8 @@ export default function ChatsPage() {
                   onClick={() => { setSource(opt.value); setMode(opt.value === "SCREENSHOT" ? "screenshot" : "text"); }}
                   className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-xs transition-all ${
                     source === opt.value
-                      ? "border-brand-green bg-brand-green-bg text-brand-green font-semibold"
-                      : "border-border text-muted-foreground hover:border-brand-green/50"
+                      ? "border-primary bg-mint/20 text-primary font-semibold"
+                      : "border-border text-muted-foreground hover:border-primary/50"
                   }`}
                 >
                   <span>{opt.icon}</span>
@@ -117,7 +128,7 @@ export default function ChatsPage() {
                 key={m}
                 onClick={() => setMode(m)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  mode === m ? "bg-white text-brand-green shadow-sm" : "text-muted-foreground"
+                  mode === m ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
                 }`}
               >
                 {m === "text" ? "Текст" : "Скриншоты"}
@@ -131,14 +142,14 @@ export default function ChatsPage() {
               onChange={(e) => setChatText(e.target.value)}
               placeholder={"[Клиент]: Здравствуйте, интересует ботокс для волос\n[Администратор]: Здравствуйте! Да, у нас есть эта процедура..."}
               rows={10}
-              className="w-full px-3 py-2.5 rounded-xl border border-border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green font-mono"
+              className="w-full px-3 py-2.5 rounded-xl border border-border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary font-mono"
             />
           ) : (
             <div>
               <div
                 {...getRootProps()}
                 className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
-                  isDragActive ? "border-brand-green bg-brand-green-bg" : "border-border hover:border-brand-green/50"
+                  isDragActive ? "border-primary bg-mint/20" : "border-border hover:border-primary/50"
                 }`}
               >
                 <input {...getInputProps()} />
@@ -172,35 +183,54 @@ export default function ChatsPage() {
               value={adminName}
               onChange={(e) => setAdminName(e.target.value)}
               placeholder="Имя администратора"
-              className="w-full px-3 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/30"
+              className="w-full px-3 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Название (необязательно)"
-              className="w-full px-3 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/30"
+              className="w-full px-3 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
 
           <button
             onClick={handleAnalyze}
-            disabled={loading || (!chatText.trim() && images.length === 0)}
-            className="w-full py-3 rounded-xl bg-brand-green hover:bg-brand-green-dark text-white font-semibold text-sm transition-all disabled:opacity-40 shadow-sm"
+            disabled={loading || (mode === "text" ? !chatText.trim() : images.length === 0)}
+            className="w-full py-3 rounded-xl bg-primary hover:bg-primary/80 text-white font-semibold text-sm transition-all disabled:opacity-40 shadow-sm"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="animate-spin">⟳</span> AI анализирует...
+                <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Анализирую...
               </span>
             ) : (
               "Анализировать переписку"
             )}
           </button>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+              {error}
+            </div>
+          )}
         </div>
 
         {/* Результат */}
         <div className="lg:col-span-3">
           {result?.result ? (
             <ChatAnalysisView data={result.result} />
+          ) : loading ? (
+            <div className="h-full flex items-center justify-center text-center p-12 bg-muted/30 rounded-2xl border border-dashed border-border">
+              <div>
+                <div className="inline-block w-10 h-10 border-3 border-primary/30 border-t-primary rounded-full animate-spin mb-4" />
+                <p className="text-muted-foreground text-sm">
+                  AI анализирует переписку...
+                </p>
+                <p className="text-muted-foreground text-xs mt-1">
+                  Обычно это занимает 5-10 секунд
+                </p>
+              </div>
+            </div>
           ) : (
             <div className="h-full flex items-center justify-center text-center p-12 bg-muted/30 rounded-2xl border border-dashed border-border">
               <div>
@@ -240,7 +270,7 @@ function ChatAnalysisView({ data }: { data: ChatAnalysisResult }) {
             key={t}
             onClick={() => setTab(t)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              tab === t ? "bg-white text-brand-green shadow-sm" : "text-muted-foreground"
+              tab === t ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
             }`}
           >
             {t === "messages" ? "Сообщения" : t === "stages" ? "Этапы" : "Метрики"}
@@ -266,7 +296,7 @@ function ChatAnalysisView({ data }: { data: ChatAnalysisResult }) {
               <div className="flex items-center gap-2 mb-1.5">
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                   msg.sender === "admin"
-                    ? "bg-brand-green text-white"
+                    ? "bg-primary text-white"
                     : "bg-muted-foreground text-white"
                 }`}>
                   {msg.sender === "admin" ? "Администратор" : "Клиент"}
@@ -291,7 +321,7 @@ function ChatAnalysisView({ data }: { data: ChatAnalysisResult }) {
       {tab === "stages" && (
         <div className="space-y-3">
           {data.stages?.map((stage) => (
-            <div key={stage.key} className="card-brand p-4">
+            <div key={stage.key} className="card-salon p-4">
               <div className="flex items-center gap-3 mb-2">
                 <span className={`text-sm font-bold px-2.5 py-1 rounded-lg border ${getScoreBg(stage.score)}`}>
                   {stage.score}/10
@@ -305,7 +335,7 @@ function ChatAnalysisView({ data }: { data: ChatAnalysisResult }) {
       )}
 
       {tab === "metrics" && data.additionalMetrics && (
-        <div className="card-brand p-4 space-y-3">
+        <div className="card-salon p-4 space-y-3">
           {Object.entries(data.additionalMetrics).map(([key, value]) => {
             const labels: Record<string, string> = {
               responseSpeed: "Скорость ответа",

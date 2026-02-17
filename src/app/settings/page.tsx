@@ -87,8 +87,8 @@ export default function SettingsPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-brand-dark flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-orange to-brand-orange-light flex items-center justify-center text-white">⚙</span>
+        <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
+          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">⚙</span>
           Настройки
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
@@ -102,7 +102,7 @@ export default function SettingsPage() {
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === t ? "bg-white text-brand-orange shadow-sm" : "text-muted-foreground"
+              tab === t ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
             }`}
           >
             {t === "products" ? "Продукты / Услуги" : "Брендинг"}
@@ -118,7 +118,7 @@ export default function SettingsPage() {
             </p>
             <button
               onClick={() => { setEditingProduct(EMPTY_PRODUCT); setShowForm(true); }}
-              className="px-4 py-2 rounded-xl bg-brand-orange text-white text-sm font-medium hover:bg-brand-orange-dark transition-all"
+              className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/80 transition-all"
             >
               + Добавить продукт
             </button>
@@ -127,7 +127,7 @@ export default function SettingsPage() {
           {/* Список продуктов */}
           <div className="space-y-3">
             {products.map((p) => (
-              <div key={p.id} className="card-brand p-5">
+              <div key={p.id} className="card-salon p-5">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export default function SettingsPage() {
                       )}
                     </div>
                     {p.price && (
-                      <p className="text-sm text-brand-orange font-medium mt-0.5">
+                      <p className="text-sm text-primary font-medium mt-0.5">
                         {Number(p.price).toLocaleString("ru")} ₽
                       </p>
                     )}
@@ -193,7 +193,7 @@ export default function SettingsPage() {
       )}
 
       {tab === "branding" && (
-        <div className="card-brand p-6 max-w-md">
+        <div className="card-salon p-6 max-w-md">
           <p className="text-sm text-muted-foreground mb-4">
             Настройка брендинга платформы (будет доступна в следующей версии)
           </p>
@@ -208,7 +208,7 @@ export default function SettingsPage() {
                 {["#E5603A", "#2A8A65", "#7C3AED", "#0EA5E9"].map((color) => (
                   <div
                     key={color}
-                    className="w-8 h-8 rounded-lg cursor-pointer border-2 border-transparent hover:border-brand-dark"
+                    className="w-8 h-8 rounded-lg cursor-pointer border-2 border-transparent hover:border-foreground"
                     style={{ backgroundColor: color }}
                   />
                 ))}
@@ -238,7 +238,7 @@ export default function SettingsPage() {
                     value={editingProduct.name}
                     onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
                     placeholder="Ботокс для волос"
-                    className="w-full px-3 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+                    className="w-full px-3 py-2.5 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
                 <div>
@@ -265,7 +265,7 @@ export default function SettingsPage() {
                     onChange={(e) => setEditingProduct({ ...editingProduct, [field.key]: e.target.value })}
                     placeholder={field.placeholder}
                     rows={3}
-                    className="w-full px-3 py-2.5 rounded-xl border border-border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+                    className="w-full px-3 py-2.5 rounded-xl border border-border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
               ))}
@@ -337,7 +337,7 @@ export default function SettingsPage() {
               <button
                 onClick={saveProduct}
                 disabled={saving || !editingProduct.name}
-                className="px-4 py-2 rounded-xl bg-brand-orange text-white text-sm font-medium hover:bg-brand-orange-dark disabled:opacity-40"
+                className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/80 disabled:opacity-40"
               >
                 {saving ? "Сохраняю..." : "Сохранить"}
               </button>

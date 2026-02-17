@@ -117,8 +117,8 @@ export default function AdminCardPage() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-brand-dark flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-brand-green-light flex items-center justify-center text-white">◉</span>
+          <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">◉</span>
             Карточка администратора
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -146,7 +146,7 @@ export default function AdminCardPage() {
           <button
             onClick={generateCard}
             disabled={generating}
-            className="px-4 py-2 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white text-sm font-medium transition-all disabled:opacity-40"
+            className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/80 text-white text-sm font-medium transition-all disabled:opacity-40"
           >
             {generating ? "⟳ Генерирую..." : "⟳ Обновить"}
           </button>
@@ -162,7 +162,7 @@ export default function AdminCardPage() {
                 onClick={toggleShare}
                 className={`px-4 py-2 rounded-xl border text-sm transition-all ${
                   card.isShared
-                    ? "border-brand-green bg-brand-green-bg text-brand-green"
+                    ? "border-primary bg-mint/20 text-primary"
                     : "border-border hover:bg-muted"
                 }`}
               >
@@ -174,14 +174,14 @@ export default function AdminCardPage() {
       </div>
 
       {shareUrl && (
-        <div className="mb-4 p-3 rounded-xl bg-brand-green-bg border border-brand-green/20 flex items-center justify-between">
-          <span className="text-sm text-brand-green font-medium">Ссылка для просмотра:</span>
-          <a href={shareUrl} target="_blank" className="text-sm text-brand-green underline truncate max-w-xs">
+        <div className="mb-4 p-3 rounded-xl bg-mint/20 border border-primary/20 flex items-center justify-between">
+          <span className="text-sm text-primary font-medium">Ссылка для просмотра:</span>
+          <a href={shareUrl} target="_blank" className="text-sm text-primary underline truncate max-w-xs">
             {shareUrl}
           </a>
           <button
             onClick={() => navigator.clipboard.writeText(shareUrl)}
-            className="text-xs text-brand-green hover:underline ml-2"
+            className="text-xs text-primary hover:underline ml-2"
           >
             Копировать
           </button>
@@ -195,7 +195,7 @@ export default function AdminCardPage() {
           <button
             onClick={generateCard}
             disabled={generating}
-            className="px-6 py-3 rounded-xl bg-brand-orange text-white font-semibold text-sm hover:bg-brand-orange-dark transition-all disabled:opacity-40"
+            className="px-6 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary/80 transition-all disabled:opacity-40"
           >
             {generating ? "⟳ Генерирую..." : "Создать карточку"}
           </button>
@@ -208,29 +208,29 @@ export default function AdminCardPage() {
           {/* Левая панель */}
           <div className="lg:col-span-1 space-y-4">
             {/* Профиль */}
-            <div className="section-header-green">
+            <div className="hero-banner rounded-2xl relative z-0">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
                   {card.adminName[0]}
                 </div>
                 <div>
-                  <p className="font-bold text-lg">{card.adminName}</p>
-                  {card.salonName && <p className="text-sm opacity-80">{card.salonName}</p>}
-                  <p className="text-xs opacity-60">{formatDate(card.createdAt)}</p>
+                  <p className="font-bold text-lg text-foreground">{card.adminName}</p>
+                  {card.salonName && <p className="text-sm text-muted-foreground">{card.salonName}</p>}
+                  <p className="text-xs text-muted-foreground">{formatDate(card.createdAt)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div>
-                  <p className="text-xs opacity-70">Общая оценка</p>
-                  <p className="text-4xl font-bold">
+                  <p className="text-xs text-muted-foreground">Общая оценка</p>
+                  <p className="text-4xl font-bold text-foreground">
                     {formatScore(card.overallScore ?? null)}
-                    <span className="text-xl">/10</span>
+                    <span className="text-xl text-muted-foreground">/10</span>
                   </p>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">{getScoreLabel(card.overallScore ?? 0)}</p>
+                  <p className="text-sm font-medium text-foreground">{getScoreLabel(card.overallScore ?? 0)}</p>
                   {card.callSummary && (
-                    <p className="text-xs opacity-70 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {card.callSummary.totalCalls} звонков · ср. {formatScore(card.callSummary.avgScore)}
                     </p>
                   )}
@@ -240,7 +240,7 @@ export default function AdminCardPage() {
 
             {/* Результаты тестов */}
             {card.testSummary && (
-              <div className="card-brand p-4 space-y-2">
+              <div className="card-salon p-4 space-y-2">
                 <h3 className="text-sm font-semibold mb-3">Результаты тестов</h3>
                 {card.testSummary.practicalCase && (
                   <TestRow label="Практический кейс" score={card.testSummary.practicalCase.score} />
@@ -263,20 +263,20 @@ export default function AdminCardPage() {
 
             {/* Радарная диаграмма */}
             {radarData.length > 0 && (
-              <div className="card-brand p-4">
+              <div className="card-salon p-4">
                 <h3 className="text-sm font-semibold mb-3">Профиль навыков</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <RadarChart data={radarData}>
-                    <PolarGrid stroke="#e5e7eb" />
+                    <PolarGrid stroke="hsl(var(--border))" />
                     <PolarAngleAxis
                       dataKey="skill"
-                      tick={{ fontSize: 10, fill: "#6b7280" }}
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                     />
                     <Radar
                       name="Оценка"
                       dataKey="value"
-                      stroke="#2A8A65"
-                      fill="#2A8A65"
+                      stroke="hsl(var(--primary))"
+                      fill="hsl(var(--primary))"
                       fillOpacity={0.2}
                       strokeWidth={2}
                     />
@@ -296,7 +296,7 @@ export default function AdminCardPage() {
                   key={t}
                   onClick={() => setActiveTab(t)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === t ? "bg-white text-brand-green shadow-sm" : "text-muted-foreground"
+                    activeTab === t ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
                   }`}
                 >
                   {t === "overview" ? "Обзор" : t === "skills" ? "Навыки" : "План развития"}
@@ -327,7 +327,7 @@ export default function AdminCardPage() {
             {activeTab === "skills" && card.skills && (
               <div className="space-y-4">
                 {card.skills.map((skill) => (
-                  <div key={skill.key} className="card-brand p-5">
+                  <div key={skill.key} className="card-salon p-5">
                     <div className="flex items-start justify-between mb-3">
                       <h3 className="font-semibold text-foreground">{skill.name}</h3>
                       <span className={`text-sm font-bold px-2.5 py-1 rounded-lg border ${getScoreBg(skill.score)}`}>
@@ -337,11 +337,11 @@ export default function AdminCardPage() {
                     <p className="text-sm text-muted-foreground mb-3">{skill.details}</p>
                     {skill.recommendations?.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-brand-orange mb-1.5">Рекомендации:</p>
+                        <p className="text-xs font-semibold text-secondary mb-1.5">Рекомендации:</p>
                         <ul className="space-y-1">
                           {skill.recommendations.map((r, i) => (
                             <li key={i} className="text-xs flex gap-1.5 text-muted-foreground">
-                              <span className="text-brand-orange flex-shrink-0">→</span>{r}
+                              <span className="text-secondary flex-shrink-0">→</span>{r}
                             </li>
                           ))}
                         </ul>
@@ -359,15 +359,15 @@ export default function AdminCardPage() {
                     key={i}
                     className={`p-4 rounded-2xl border ${
                       i === 0
-                        ? "bg-brand-orange-bg border-brand-orange/30"
-                        : "card-brand"
+                        ? "bg-muted border-secondary/30"
+                        : "card-salon"
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <span
                         className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                           i === 0
-                            ? "bg-brand-orange text-white"
+                            ? "bg-secondary text-white"
                             : "bg-muted text-muted-foreground"
                         }`}
                       >
@@ -376,7 +376,7 @@ export default function AdminCardPage() {
                       <div className="flex-1">
                         <p className="font-semibold text-sm text-foreground">{item.skill}</p>
                         <p className="text-sm text-muted-foreground mt-0.5">{item.action}</p>
-                        <p className="text-xs text-brand-orange font-medium mt-1.5">⏱ {item.deadline}</p>
+                        <p className="text-xs text-secondary font-medium mt-1.5">⏱ {item.deadline}</p>
                       </div>
                     </div>
                   </div>

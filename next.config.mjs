@@ -4,6 +4,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "100mb",
     },
+    serverComponentsExternalPackages: ["fluent-ffmpeg", "@ffmpeg-installer/ffmpeg"],
   },
   images: {
     remotePatterns: [],

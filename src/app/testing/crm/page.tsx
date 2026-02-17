@@ -66,8 +66,8 @@ export default function CRMTestPage() {
     return (
       <div className="p-6 max-w-4xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-brand-dark flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-brand-green-light flex items-center justify-center text-white">⊕</span>
+          <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">⊕</span>
             Тест на работу с CRM
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -85,16 +85,16 @@ export default function CRMTestPage() {
             {Object.entries(grouped).map(([category, qs]) => (
               <div key={category}>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-brand-green" />
-                  <h2 className="text-sm font-semibold text-brand-dark uppercase tracking-wider">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <h2 className="text-sm font-semibold font-heading text-foreground uppercase tracking-wider">
                     {category}
                   </h2>
                 </div>
                 <div className="space-y-4">
                   {qs.map((q, i) => (
-                    <div key={q.id} className="card-brand p-5">
+                    <div key={q.id} className="card-salon p-5">
                       <div className="flex items-start gap-3 mb-3">
-                        <span className="w-6 h-6 rounded-full bg-brand-green text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                        <span className="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
                           {i + 1}
                         </span>
                         <p className="text-sm font-medium text-foreground">{q.question}</p>
@@ -106,7 +106,7 @@ export default function CRMTestPage() {
                         }
                         placeholder="Ваш ответ..."
                         rows={4}
-                        className="w-full px-3 py-2.5 rounded-xl border border-border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-green/30"
+                        className="w-full px-3 py-2.5 rounded-xl border border-border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
                       />
                     </div>
                   ))}
@@ -117,7 +117,7 @@ export default function CRMTestPage() {
             <button
               onClick={handleSubmit}
               disabled={loading || !allAnswered}
-              className="w-full py-3 rounded-xl bg-brand-green hover:bg-brand-green-dark text-white font-semibold text-sm transition-all disabled:opacity-40 shadow-sm"
+              className="w-full py-3 rounded-xl bg-primary hover:bg-primary/80 text-white font-semibold text-sm transition-all disabled:opacity-40 shadow-sm"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -143,7 +143,7 @@ export default function CRMTestPage() {
           ← Пройти снова
         </button>
 
-        <h1 className="text-2xl font-bold text-brand-dark mb-6">
+        <h1 className="text-2xl font-bold font-heading text-foreground mb-6">
           Результаты теста CRM
         </h1>
 
@@ -170,17 +170,17 @@ export default function CRMTestPage() {
 
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           {result.strengths?.length > 0 && (
-            <div className="card-brand p-4">
-              <h3 className="text-sm font-semibold text-brand-green mb-2">✦ Сильные стороны</h3>
+            <div className="card-salon p-4">
+              <h3 className="text-sm font-semibold text-primary mb-2">✦ Сильные стороны</h3>
               <ul className="space-y-1">
                 {result.strengths.map((s, i) => (
-                  <li key={i} className="text-xs flex gap-1.5"><span className="text-brand-green">✓</span>{s}</li>
+                  <li key={i} className="text-xs flex gap-1.5"><span className="text-primary">✓</span>{s}</li>
                 ))}
               </ul>
             </div>
           )}
           {result.weakAreas?.length > 0 && (
-            <div className="card-brand p-4">
+            <div className="card-salon p-4">
               <h3 className="text-sm font-semibold text-red-600 mb-2">⚠ Что улучшить</h3>
               <ul className="space-y-1">
                 {result.weakAreas.map((w, i) => (
@@ -192,7 +192,7 @@ export default function CRMTestPage() {
         </div>
 
         {result.detailedAnalysis && (
-          <div className="card-brand p-5 mb-4">
+          <div className="card-salon p-5 mb-4">
             <h3 className="text-sm font-semibold mb-3">Детальный разбор ответов</h3>
             <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
               {result.detailedAnalysis}
@@ -201,12 +201,12 @@ export default function CRMTestPage() {
         )}
 
         {result.recommendations?.length > 0 && (
-          <div className="card-brand p-5">
-            <h3 className="text-sm font-semibold text-brand-green mb-3">⊕ Рекомендации по CRM</h3>
+          <div className="card-salon p-5">
+            <h3 className="text-sm font-semibold text-primary mb-3">⊕ Рекомендации по CRM</h3>
             <ul className="space-y-2">
               {result.recommendations.map((r, i) => (
                 <li key={i} className="flex gap-2 text-sm">
-                  <span className="w-5 h-5 rounded-full bg-brand-green text-white text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                  <span className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
                   {r}
                 </li>
               ))}

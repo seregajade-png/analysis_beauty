@@ -6,9 +6,9 @@ import { Sidebar } from "./Sidebar";
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <div className="flex min-h-screen bg-background">
+      <div className="min-h-screen bg-background">
         <Sidebar />
-        <main className="flex-1 overflow-auto">
+        <main className="ml-64 p-8 lg:p-12">
           {children}
         </main>
       </div>

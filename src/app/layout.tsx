@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin", "cyrillic"] });
+const inter = Inter({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-body",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-heading",
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
 
 export const metadata: Metadata = {
-  title: "Beauty Call Analyzer — Платформа диагностики администраторов",
+  title: "BeautyChief — Платформа диагностики администраторов",
   description:
     "AI-анализ звонков и переписок, тестирование и карточки администраторов салонов красоты",
 };
@@ -17,7 +26,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru">
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.variable} ${playfair.variable} ${inter.className}`}>
+        {children}
+      </body>
     </html>
   );
 }

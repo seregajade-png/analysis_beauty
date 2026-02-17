@@ -49,8 +49,8 @@ export default function CasesPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-brand-dark flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-orange to-brand-orange-light flex items-center justify-center text-white">◈</span>
+        <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
+          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">◈</span>
           Практические кейсы
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
@@ -72,8 +72,8 @@ export default function CasesPage() {
                     onClick={() => { setSelectedCase(c); setResult(null); setResponse(""); }}
                     className={`w-full text-left p-3 rounded-xl border text-sm transition-all ${
                       selectedCase?.id === c.id
-                        ? "border-brand-orange bg-brand-orange-bg text-brand-orange font-medium"
-                        : "border-border hover:border-brand-orange/50"
+                        ? "border-primary bg-mint/20 text-primary font-medium"
+                        : "border-border hover:border-primary/50"
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -90,13 +90,13 @@ export default function CasesPage() {
 
           {/* Кейс */}
           {selectedCase && (
-            <div className="section-header-orange">
+            <div className="hero-banner rounded-2xl relative z-0">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-wider opacity-80">Ситуация</span>
-                <span className="text-xs opacity-70">{"★".repeat(selectedCase.difficulty)}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-primary">Ситуация</span>
+                <span className="text-xs text-muted-foreground">{"★".repeat(selectedCase.difficulty)}</span>
               </div>
-              <h3 className="font-bold text-lg mb-2">{selectedCase.title}</h3>
-              <p className="text-sm opacity-90 leading-relaxed">{selectedCase.scenario}</p>
+              <h3 className="font-bold text-lg mb-2 text-foreground">{selectedCase.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{selectedCase.scenario}</p>
             </div>
           )}
 
@@ -111,7 +111,7 @@ export default function CasesPage() {
                   onChange={(e) => setResponse(e.target.value)}
                   placeholder={"Вы: Салон красоты «Название», администратор Анна, добрый день!\nКлиент: Здравствуйте, я хотела бы...\nВы: ..."}
                   rows={12}
-                  className="w-full px-3 py-2.5 rounded-xl border border-border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-orange/30 font-mono"
+                  className="w-full px-3 py-2.5 rounded-xl border border-border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   {response.length} символов · рекомендуется минимум 200
@@ -120,7 +120,7 @@ export default function CasesPage() {
               <button
                 onClick={handleSubmit}
                 disabled={loading || response.length < 50}
-                className="w-full py-3 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold text-sm transition-all disabled:opacity-40"
+                className="w-full py-3 rounded-xl bg-primary hover:bg-primary/80 text-white font-semibold text-sm transition-all disabled:opacity-40"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -163,19 +163,19 @@ export default function CasesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 {result.strengths?.length > 0 && (
-                  <div className="card-brand p-4">
-                    <h3 className="text-sm font-semibold text-brand-green mb-2">✦ Сильные стороны</h3>
+                  <div className="card-salon p-4">
+                    <h3 className="text-sm font-semibold text-primary mb-2">✦ Сильные стороны</h3>
                     <ul className="space-y-1">
                       {result.strengths.map((s, i) => (
                         <li key={i} className="text-xs text-foreground flex gap-1.5">
-                          <span className="text-brand-green flex-shrink-0">✓</span>{s}
+                          <span className="text-primary flex-shrink-0">✓</span>{s}
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
                 {result.weaknesses?.length > 0 && (
-                  <div className="card-brand p-4">
+                  <div className="card-salon p-4">
                     <h3 className="text-sm font-semibold text-red-600 mb-2">⚠ Что упущено</h3>
                     <ul className="space-y-1">
                       {result.weaknesses.map((w, i) => (
@@ -189,8 +189,8 @@ export default function CasesPage() {
               </div>
 
               {result.detailedAnalysis && (
-                <div className="card-brand p-4">
-                  <h3 className="text-sm font-semibold text-brand-dark mb-2">Детальный разбор</h3>
+                <div className="card-salon p-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-2">Детальный разбор</h3>
                   <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
                     {result.detailedAnalysis}
                   </p>
@@ -198,12 +198,12 @@ export default function CasesPage() {
               )}
 
               {result.recommendations?.length > 0 && (
-                <div className="card-brand p-4">
-                  <h3 className="text-sm font-semibold text-brand-orange mb-3">◈ Рекомендации</h3>
+                <div className="card-salon p-4">
+                  <h3 className="text-sm font-semibold text-secondary mb-3">◈ Рекомендации</h3>
                   <ul className="space-y-2">
                     {result.recommendations.map((rec, i) => (
                       <li key={i} className="flex gap-2 text-sm">
-                        <span className="w-5 h-5 rounded-full bg-brand-orange text-white text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                        <span className="w-5 h-5 rounded-full bg-secondary text-white text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
                         {rec}
                       </li>
                     ))}

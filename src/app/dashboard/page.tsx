@@ -2,6 +2,16 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatScore, getScoreBg, formatDateTime } from "@/lib/utils";
 import Link from "next/link";
+import {
+  Phone,
+  MessageSquare,
+  FlaskConical,
+  TrendingUp,
+  UserCircle,
+  Gamepad2,
+  Package,
+  Database,
+} from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -45,65 +55,63 @@ export default async function DashboardPage() {
   const isAdmin = session.user.role === "ADMIN";
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      {/* Приветствие */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-brand-dark">
-          Добрый день, {session.user.name?.split(" ")[0]}!
+    <div className="max-w-6xl mx-auto">
+      {/* Hero Banner */}
+      <div className="hero-banner rounded-2xl mb-8 relative z-0">
+        <h1 className="heading-display text-3xl lg:text-4xl text-foreground relative z-10">
+          Дашборд
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="mt-2 text-base text-muted-foreground relative z-10">
           {isAdmin
-            ? "Ваша персональная панель диагностики"
-            : "Панель управления и аналитики"}
+            ? `Добрый день, ${session.user.name?.split(" ")[0]}! Ваша панель диагностики`
+            : `Добрый день, ${session.user.name?.split(" ")[0]}! Панель управления и аналитики`}
         </p>
       </div>
 
-      {/* Сводные карточки */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
-          label="Средняя оценка звонков"
+          title="Средняя оценка звонков"
           value={avgCallScore != null ? `${formatScore(avgCallScore)}/10` : "—"}
-          sub={`${recentCalls.length} анализов`}
-          color="orange"
-          icon="☎"
+          subtitle={`${recentCalls.length} анализов`}
+          icon={<Phone size={18} />}
         />
         <StatCard
-          label="Средняя оценка переписок"
+          title="Средняя оценка переписок"
           value={avgChatScore != null ? `${formatScore(avgChatScore)}/10` : "—"}
-          sub={`${recentChats.length} анализов`}
-          color="green"
-          icon="✉"
+          subtitle={`${recentChats.length} анализов`}
+          icon={<MessageSquare size={18} />}
+          accent
         />
         <StatCard
-          label="Тестов пройдено"
+          title="Тестов пройдено"
           value={String(recentTests.length)}
-          sub="за последнее время"
-          color="orange"
-          icon="◈"
+          subtitle="за последнее время"
+          icon={<FlaskConical size={18} />}
         />
         <StatCard
-          label="Общая оценка"
+          title="Общая оценка"
           value={
             adminCard?.overallScore != null
               ? `${formatScore(adminCard.overallScore)}/10`
               : "—"
           }
-          sub="карточка администратора"
-          color="green"
-          icon="◉"
+          subtitle="карточка администратора"
+          icon={<TrendingUp size={18} />}
+          accent
         />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Последние звонки */}
-        <div className="card-brand p-5">
+        {/* Recent calls */}
+        <div className="card-salon p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-brand-dark flex items-center gap-2">
-              <span className="text-brand-orange">☎</span> Последние звонки
-            </h2>
+            <h3 className="font-heading font-bold text-xl text-foreground flex items-center gap-2">
+              <Phone size={18} className="text-primary" /> Последние звонки
+            </h3>
             <Link
               href="/analysis/calls"
-              className="text-xs text-brand-orange hover:underline font-medium"
+              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
             >
               Все →
             </Link>
@@ -114,44 +122,43 @@ export default async function DashboardPage() {
               action={{ href: "/analysis/calls", label: "Загрузить звонок" }}
             />
           ) : (
-            <ul className="space-y-2">
+            <div className="space-y-1">
               {recentCalls.map((call) => (
-                <li key={call.id}>
-                  <Link
-                    href={`/analysis/calls?id=${call.id}`}
-                    className="flex items-center justify-between p-3 rounded-xl hover:bg-muted transition-colors group"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground group-hover:text-brand-orange transition-colors">
-                        {call.title ?? call.audioFileName ?? "Звонок"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDateTime(call.createdAt)}
-                      </p>
-                    </div>
-                    {call.overallScore != null && (
-                      <span
-                        className={`text-xs font-bold px-2 py-1 rounded-lg border ${getScoreBg(call.overallScore)}`}
-                      >
-                        {formatScore(call.overallScore)}
-                      </span>
-                    )}
-                  </Link>
-                </li>
+                <Link
+                  key={call.id}
+                  href={`/analysis/calls?id=${call.id}`}
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                      {call.title ?? call.audioFileName ?? "Звонок"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDateTime(call.createdAt)}
+                    </p>
+                  </div>
+                  {call.overallScore != null && (
+                    <span
+                      className={`text-xs font-bold px-2 py-1 rounded-lg border ${getScoreBg(call.overallScore)}`}
+                    >
+                      {formatScore(call.overallScore)}
+                    </span>
+                  )}
+                </Link>
               ))}
-            </ul>
+            </div>
           )}
         </div>
 
-        {/* Последние переписки */}
-        <div className="card-brand p-5">
+        {/* Recent chats */}
+        <div className="card-salon p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-brand-dark flex items-center gap-2">
-              <span className="text-brand-green">✉</span> Последние переписки
-            </h2>
+            <h3 className="font-heading font-bold text-xl text-foreground flex items-center gap-2">
+              <MessageSquare size={18} className="text-secondary" /> Последние переписки
+            </h3>
             <Link
               href="/analysis/chats"
-              className="text-xs text-brand-orange hover:underline font-medium"
+              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
             >
               Все →
             </Link>
@@ -162,73 +169,54 @@ export default async function DashboardPage() {
               action={{ href: "/analysis/chats", label: "Добавить переписку" }}
             />
           ) : (
-            <ul className="space-y-2">
+            <div className="space-y-1">
               {recentChats.map((chat) => (
-                <li key={chat.id}>
-                  <Link
-                    href={`/analysis/chats?id=${chat.id}`}
-                    className="flex items-center justify-between p-3 rounded-xl hover:bg-muted transition-colors group"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground group-hover:text-brand-green transition-colors">
-                        {chat.title ?? "Переписка"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {chat.source} · {formatDateTime(chat.createdAt)}
-                      </p>
-                    </div>
-                    {chat.overallScore != null && (
-                      <span
-                        className={`text-xs font-bold px-2 py-1 rounded-lg border ${getScoreBg(chat.overallScore)}`}
-                      >
-                        {formatScore(chat.overallScore)}
-                      </span>
-                    )}
-                  </Link>
-                </li>
+                <Link
+                  key={chat.id}
+                  href={`/analysis/chats?id=${chat.id}`}
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                      {chat.title ?? "Переписка"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {chat.source} · {formatDateTime(chat.createdAt)}
+                    </p>
+                  </div>
+                  {chat.overallScore != null && (
+                    <span
+                      className={`text-xs font-bold px-2 py-1 rounded-lg border ${getScoreBg(chat.overallScore)}`}
+                    >
+                      {formatScore(chat.overallScore)}
+                    </span>
+                  )}
+                </Link>
               ))}
-            </ul>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Быстрые действия */}
-      <div className="mt-6">
-        <h2 className="font-semibold text-brand-dark mb-4">Начать тест</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Quick actions */}
+      <div className="mt-8">
+        <h3 className="font-heading font-bold text-xl text-foreground mb-4">Начать тест</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            {
-              href: "/testing/cases",
-              label: "Практический кейс",
-              icon: "◈",
-              color: "bg-brand-orange-bg border-brand-orange/20",
-            },
-            {
-              href: "/testing/roleplay",
-              label: "Ролевая игра",
-              icon: "▷",
-              color: "bg-brand-green-bg border-brand-green/20",
-            },
-            {
-              href: "/testing/products",
-              label: "Знание продуктов",
-              icon: "◎",
-              color: "bg-brand-orange-bg border-brand-orange/20",
-            },
-            {
-              href: "/testing/crm",
-              label: "Работа с CRM",
-              icon: "⊕",
-              color: "bg-brand-green-bg border-brand-green/20",
-            },
+            { href: "/testing/cases", label: "Практический кейс", icon: FlaskConical },
+            { href: "/testing/roleplay", label: "Ролевая игра", icon: Gamepad2 },
+            { href: "/testing/products", label: "Знание продуктов", icon: Package },
+            { href: "/testing/crm", label: "Работа с CRM", icon: Database },
           ].map((action) => (
             <Link
               key={action.href}
               href={action.href}
-              className={`flex flex-col items-center gap-2 p-4 rounded-2xl border ${action.color} hover:shadow-sm transition-all text-center`}
+              className="card-salon flex flex-col items-center gap-3 p-6 hover:border-primary transition-all duration-200 text-center group"
             >
-              <span className="text-2xl">{action.icon}</span>
-              <span className="text-sm font-medium text-brand-dark">
+              <div className="w-12 h-12 rounded-full bg-mint flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-200">
+                <action.icon size={22} />
+              </div>
+              <span className="text-sm font-medium text-foreground">
                 {action.label}
               </span>
             </Link>
@@ -240,34 +228,30 @@ export default async function DashboardPage() {
 }
 
 function StatCard({
-  label,
+  title,
   value,
-  sub,
-  color,
+  subtitle,
   icon,
+  accent,
 }: {
-  label: string;
+  title: string;
   value: string;
-  sub: string;
-  color: "orange" | "green";
-  icon: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  accent?: boolean;
 }) {
   return (
-    <div className="card-brand p-4">
-      <div className="flex items-start justify-between mb-3">
-        <span
-          className={`w-9 h-9 rounded-xl flex items-center justify-center text-base ${
-            color === "orange"
-              ? "bg-brand-orange-bg text-brand-orange"
-              : "bg-brand-green-bg text-brand-green"
-          }`}
-        >
+    <div className={`card-salon p-6 animate-fade-in ${accent ? "border-primary" : ""}`}>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground font-medium">{title}</p>
+          <p className="text-3xl font-heading font-bold mt-2 text-foreground">{value}</p>
+          <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+        </div>
+        <div className="w-10 h-10 rounded-full bg-mint flex items-center justify-center text-primary">
           {icon}
-        </span>
+        </div>
       </div>
-      <p className="text-2xl font-bold text-brand-dark">{value}</p>
-      <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
-      <p className="text-xs text-foreground font-medium mt-1">{label}</p>
     </div>
   );
 }
@@ -284,7 +268,7 @@ function EmptyState({
       <p className="text-sm text-muted-foreground mb-3">{label}</p>
       <Link
         href={action.href}
-        className="inline-flex items-center gap-1 text-xs font-medium text-brand-orange hover:underline"
+        className="btn-primary-salon inline-flex items-center gap-1 text-xs"
       >
         {action.label} →
       </Link>
