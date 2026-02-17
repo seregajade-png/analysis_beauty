@@ -120,7 +120,7 @@ function LoginForm() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          © 2025 BeautyChief
+          © 2026 BeautyChief
         </p>
       </div>
     </div>
