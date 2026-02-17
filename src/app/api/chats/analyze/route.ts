@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { analyzeChat } from "@/lib/ai/analyzer";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { analyzeChat, extractTextFromScreenshots } from "@/lib/ai/analyzer";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -18,7 +16,7 @@ export async function POST(req: NextRequest) {
     let source = "TEXT";
     let adminName = "";
     let title = "";
-    let imageUrls: string[] = [];
+    const imagesBase64: { base64: string; mimeType: string }[] = [];
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
@@ -27,34 +25,19 @@ export async function POST(req: NextRequest) {
       adminName = (formData.get("adminName") as string) ?? "";
       title = (formData.get("title") as string) ?? "";
 
-      // Обрабатываем загруженные изображения
+      // Читаем изображения в base64
       const files = formData.getAll("images") as File[];
       for (const file of files) {
         if (file.size > 0) {
           const bytes = await file.arrayBuffer();
-          const buffer = Buffer.from(bytes);
-
-          const uploadDir = path.join(
-            process.cwd(),
-            "public",
-            "uploads",
-            "chats"
-          );
-          await mkdir(uploadDir, { recursive: true });
-
-          const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-          await writeFile(path.join(uploadDir, fileName), buffer);
-          imageUrls.push(`/uploads/chats/${fileName}`);
+          const base64 = Buffer.from(bytes).toString("base64");
+          imagesBase64.push({ base64, mimeType: file.type || "image/jpeg" });
         }
       }
 
-      // OCR если нет текста но есть изображения
-      if (!chatText && imageUrls.length > 0) {
-        chatText = await performOCR(
-          imageUrls.map((url) =>
-            path.join(process.cwd(), "public", url)
-          )
-        );
+      // Если нет текста но есть скриншоты — извлекаем текст через GPT Vision
+      if (!chatText.trim() && imagesBase64.length > 0) {
+        chatText = await extractTextFromScreenshots(imagesBase64);
         source = "SCREENSHOT";
       }
     } else {
@@ -85,7 +68,7 @@ export async function POST(req: NextRequest) {
           | "TEXT"
           | "SCREENSHOT",
         rawText: chatText,
-        imageUrls,
+        imageUrls: [],
         status: "ANALYZING",
       },
     });
@@ -133,28 +116,6 @@ export async function POST(req: NextRequest) {
       { error: "Ошибка при анализе переписки" },
       { status: 500 }
     );
-  }
-}
-
-async function performOCR(imagePaths: string[]): Promise<string> {
-  // Используем Tesseract.js для OCR на сервере
-  // В продакшне лучше использовать Google Cloud Vision
-  try {
-    const { createWorker } = await import("tesseract.js");
-    const worker = await createWorker("rus");
-
-    let text = "";
-    for (const imgPath of imagePaths) {
-      const {
-        data: { text: imgText },
-      } = await worker.recognize(imgPath);
-      text += imgText + "\n\n";
-    }
-
-    await worker.terminate();
-    return text.trim();
-  } catch {
-    return "[Не удалось распознать текст со скриншотов]";
   }
 }
 

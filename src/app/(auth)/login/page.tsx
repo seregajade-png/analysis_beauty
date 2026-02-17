@@ -2,10 +2,9 @@
 
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,17 +16,26 @@ function LoginForm() {
     setLoading(true);
     setError("");
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const callbackUrl = params.get("callbackUrl") ?? "/dashboard";
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl,
+      });
 
-    if (result?.error) {
-      setError("Неверный email или пароль");
+      if (result?.error) {
+        setError("Неверный email или пароль");
+        setLoading(false);
+      } else if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        window.location.href = callbackUrl;
+      }
+    } catch {
+      setError("Ошибка входа");
       setLoading(false);
-    } else {
-      router.push(params.get("callbackUrl") ?? "/dashboard");
     }
   }
 

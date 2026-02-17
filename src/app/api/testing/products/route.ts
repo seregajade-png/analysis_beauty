@@ -47,10 +47,9 @@ export async function POST(req: NextRequest) {
       data: {
         userId: session.user.id,
         testType: "PRODUCT_KNOWLEDGE",
-        caseId: productId,
         inputText: JSON.stringify(answers),
         score: result.score,
-        analysisResult: result as object,
+        analysisResult: { ...result, productId, productName: product.name } as object,
         feedback: result.feedback,
         weakAreas: result.weakAreas,
       },

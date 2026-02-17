@@ -32,11 +32,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // AI анализ
+    // AI анализ — не передаём имя из сессии, AI определит имя из текста диалога
     const result = await analyzePracticalCase(
       scenario,
-      adminResponse,
-      session.user.name ?? undefined
+      adminResponse
     );
 
     // Сохраняем результат

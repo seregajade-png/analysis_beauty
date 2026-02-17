@@ -1,8 +1,11 @@
-import OpenAI from "openai";
-import { createReadStream } from "fs";
-import { writeFile, unlink } from "fs/promises";
+import OpenAI, { toFile } from "openai";
+import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
+import ffmpeg from "fluent-ffmpeg";
+import { writeFile, unlink, readFile } from "fs/promises";
 import path from "path";
 import os from "os";
+
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -20,20 +23,74 @@ export interface TranscriptionResult {
   duration?: number;
 }
 
+// Форматы, которые Whisper принимает нативно
+const WHISPER_NATIVE_EXTS = new Set([
+  "mp3", "mp4", "m4a", "wav", "ogg", "flac", "webm", "mpeg", "mpga", "oga",
+]);
+
+function detectAudioExt(buffer: Buffer, fileName: string): string {
+  // AAC ADTS — не поддерживается Whisper, нужна конвертация
+  if (buffer[0] === 0xff && (buffer[1] & 0xf0) === 0xf0) return "aac";
+  // MP3
+  if (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) return "mp3";
+  if (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33) return "mp3"; // ID3
+  // ftyp (MP4/M4A)
+  if (buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70) return "m4a";
+  // OGG
+  if (buffer[0] === 0x4f && buffer[1] === 0x67 && buffer[2] === 0x67 && buffer[3] === 0x53) return "ogg";
+  // FLAC
+  if (buffer[0] === 0x66 && buffer[1] === 0x4c && buffer[2] === 0x61 && buffer[3] === 0x43) return "flac";
+  // RIFF (WAV)
+  if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) return "wav";
+  // WebM
+  if (buffer[0] === 0x1a && buffer[1] === 0x45) return "webm";
+
+  return fileName.split(".").pop()?.toLowerCase() ?? "mp3";
+}
+
+async function convertToMp3(inputPath: string): Promise<Buffer> {
+  const outputPath = inputPath.replace(/\.[^.]+$/, "_converted.mp3");
+  await new Promise<void>((resolve, reject) => {
+    ffmpeg(inputPath)
+      .audioCodec("libmp3lame")
+      .audioBitrate(128)
+      .output(outputPath)
+      .on("end", () => resolve())
+      .on("error", reject)
+      .run();
+  });
+  const buf = await readFile(outputPath);
+  await unlink(outputPath).catch(() => {});
+  return buf;
+}
+
 export async function transcribeAudio(
   audioBuffer: Buffer,
   fileName: string,
   language = "ru"
 ): Promise<TranscriptionResult> {
-  // Сохраняем файл во временную директорию
-  const tempPath = path.join(os.tmpdir(), `audio_${Date.now()}_${fileName}`);
+  const ext = detectAudioExt(audioBuffer, fileName);
+  const tempPath = path.join(os.tmpdir(), `audio_${Date.now()}.${ext}`);
+  await writeFile(tempPath, audioBuffer);
+
+  let finalBuffer = audioBuffer;
+  let finalExt = ext;
 
   try {
-    await writeFile(tempPath, audioBuffer);
+    if (!WHISPER_NATIVE_EXTS.has(ext)) {
+      finalBuffer = await convertToMp3(tempPath);
+      finalExt = "mp3";
+    }
 
-    const file = createReadStream(tempPath);
+    const mimeMap: Record<string, string> = {
+      mp3: "audio/mpeg", mp4: "audio/mp4", m4a: "audio/mp4",
+      wav: "audio/wav", ogg: "audio/ogg", flac: "audio/flac",
+      webm: "audio/webm", mpeg: "audio/mpeg", mpga: "audio/mpeg", oga: "audio/ogg",
+    };
+    const mime = mimeMap[finalExt] ?? "audio/mpeg";
 
-    // Используем verbose_json для получения временных меток
+    const file = await toFile(finalBuffer, `audio.${finalExt}`, { type: mime });
+
     const transcription = await openai.audio.transcriptions.create({
       file,
       model: "whisper-1",
@@ -42,7 +99,6 @@ export async function transcribeAudio(
       timestamp_granularities: ["segment"],
     });
 
-    // Пытаемся определить спикеров (простая эвристика)
     const processedSegments = processSegmentsWithSpeakers(
       transcription.segments ?? []
     );
@@ -53,7 +109,6 @@ export async function transcribeAudio(
       duration: transcription.duration,
     };
   } finally {
-    // Удаляем временный файл
     await unlink(tempPath).catch(() => {});
   }
 }
@@ -70,16 +125,12 @@ function processSegmentsWithSpeakers(
 ): TranscriptionResult["segments"] {
   if (!segments.length) return [];
 
-  // Простая эвристика для определения смены спикера:
-  // - Пауза > 1 секунды между репликами = смена спикера
-  // - Чередуем: первый спикер = Администратор, второй = Клиент
   let currentSpeaker = "Администратор";
   let previousEnd = 0;
 
   return segments.map((segment) => {
     const gap = segment.start - previousEnd;
 
-    // Если пауза > 0.5 секунды, считаем что это смена спикера
     if (gap > 0.5 && previousEnd > 0) {
       currentSpeaker =
         currentSpeaker === "Администратор" ? "Клиент" : "Администратор";
@@ -104,7 +155,6 @@ export function formatTranscriptionForAnalysis(
     return result.text;
   }
 
-  // Форматируем в читаемый вид с таймкодами и спикерами
   let formatted = "";
   let currentSpeaker = "";
 
@@ -137,7 +187,7 @@ export const ALLOWED_AUDIO_TYPES = [
   "audio/x-m4a",
   "audio/aac",
   "audio/webm",
-  "video/webm", // браузерная запись
+  "video/webm",
 ];
 
 export const MAX_AUDIO_SIZE = 100 * 1024 * 1024; // 100 MB
