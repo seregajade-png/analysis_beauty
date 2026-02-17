@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { formatScore, getScoreBg, getScoreLabel, formatDateTime } from "@/lib/utils";
-import { Upload, FileAudio, Loader2 } from "lucide-react";
+import { Upload, FileAudio, Loader2, Phone } from "lucide-react";
 import type { CallAnalysisResult, SalesStage } from "@/types";
 
 interface AnalysisRecord {
