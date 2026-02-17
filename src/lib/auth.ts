@@ -23,6 +23,7 @@ function hashPassword(password: string): string {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   // Не используем PrismaAdapter — работаем через JWT только
   session: { strategy: "jwt" },
   pages: {
