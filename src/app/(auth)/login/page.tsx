@@ -1,59 +1,23 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useFormState, useFormStatus } from "react-dom";
+import { authenticate } from "./actions";
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending} className="w-full btn-primary py-3">
+      {pending ? "Вход..." : "Войти"}
+    </button>
+  );
+}
 
 function LoginForm() {
   const params = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // Если NextAuth вернул ошибку через редирект — показываем
-  useEffect(() => {
-    if (params.get("error")) {
-      setError("Неверный email или пароль");
-    }
-  }, [params]);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      const callbackUrl = params.get("callbackUrl") ?? "/dashboard";
-
-      // Получаем CSRF-токен
-      const csrfRes = await fetch("/api/auth/csrf");
-      const { csrfToken } = await csrfRes.json();
-
-      // Нативная отправка формы — браузер обработает 302 + Set-Cookie корректно
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = "/api/auth/callback/credentials";
-
-      for (const [name, value] of Object.entries({
-        email,
-        password,
-        csrfToken,
-        callbackUrl,
-      })) {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
-      }
-
-      document.body.appendChild(form);
-      form.submit();
-    } catch {
-      setError("Ошибка входа");
-      setLoading(false);
-    }
-  }
+  const callbackUrl = params.get("callbackUrl") ?? "/dashboard";
+  const [errorMessage, formAction] = useFormState(authenticate, undefined);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -77,15 +41,16 @@ function LoginForm() {
             Войти в систему
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form action={formAction} className="space-y-4">
+            <input type="hidden" name="redirectTo" value={callbackUrl} />
+
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">
                 Email
               </label>
               <input
+                name="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@beauty-school.ru"
                 required
                 className="w-full px-4 py-2.5 rounded-lg border border-input bg-card text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -97,29 +62,22 @@ function LoginForm() {
                 Пароль
               </label>
               <input
+                name="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
                 className="w-full px-4 py-2.5 rounded-lg border border-input bg-card text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
-            {error && (
+            {errorMessage && (
               <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm animate-fade-in">
                 <span>⚠</span>
-                {error}
+                {errorMessage}
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-3"
-            >
-              {loading ? "Вход..." : "Войти"}
-            </button>
+            <SubmitButton />
           </form>
 
           <div className="mt-6 pt-5 border-t border-border">
