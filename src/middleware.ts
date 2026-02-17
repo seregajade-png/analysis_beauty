@@ -1,27 +1,49 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { decode } from "next-auth/jwt";
 
 const publicRoutes = ["/login", "/register", "/api/auth", "/api/login", "/api/debug"];
+
+const COOKIE_NAMES = [
+  "__Secure-authjs.session-token",
+  "authjs.session-token",
+  "__Secure-next-auth.session-token",
+  "next-auth.session-token",
+];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Разрешаем публичные маршруты
+  // Публичные маршруты
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
     return NextResponse.next();
   }
 
-  // Проверяем JWT-токен (лёгкая проверка, без Prisma)
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET });
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? "";
 
-  if (!token) {
-    const loginUrl = new URL("/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+  // Пробуем все возможные имена cookie
+  for (const cookieName of COOKIE_NAMES) {
+    const cookieValue = req.cookies.get(cookieName)?.value;
+    if (!cookieValue) continue;
+
+    try {
+      const token = await decode({
+        token: cookieValue,
+        secret,
+        salt: cookieName,
+      });
+      if (token?.sub) {
+        return NextResponse.next();
+      }
+    } catch {
+      // Пробуем следующее имя
+    }
   }
 
-  return NextResponse.next();
+  // Нет валидного токена
+  const loginUrl = new URL("/login", req.url);
+  loginUrl.searchParams.set("callbackUrl", pathname);
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
