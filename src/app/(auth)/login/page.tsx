@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 
 function LoginForm() {
@@ -18,19 +17,30 @@ function LoginForm() {
 
     try {
       const callbackUrl = params.get("callbackUrl") ?? "/dashboard";
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-        callbackUrl,
+
+      // Получаем CSRF-токен
+      const csrfRes = await fetch("/api/auth/csrf");
+      const { csrfToken } = await csrfRes.json();
+
+      // Прямой POST к NextAuth callback (обходим зависающий signIn из next-auth/react)
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          email,
+          password,
+          csrfToken,
+          callbackUrl,
+        }),
+        redirect: "follow",
       });
 
-      if (result?.error) {
+      // Если редирект привёл на страницу с ошибкой — логин не удался
+      if (res.url.includes("/login") || res.url.includes("error")) {
         setError("Неверный email или пароль");
         setLoading(false);
-      } else if (result?.url) {
-        window.location.href = result.url;
       } else {
+        // Сессионная cookie установлена, переходим
         window.location.href = callbackUrl;
       }
     } catch {
