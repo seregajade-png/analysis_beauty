@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useFormState, useFormStatus } from "react-dom";
 import { authenticate } from "./actions";
@@ -17,7 +17,14 @@ function SubmitButton() {
 function LoginForm() {
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") ?? "/dashboard";
-  const [errorMessage, formAction] = useFormState(authenticate, undefined);
+  const [state, formAction] = useFormState(authenticate, undefined);
+
+  // При успешном логине — hard navigation (полная перезагрузка)
+  useEffect(() => {
+    if (state?.ok) {
+      window.location.href = callbackUrl;
+    }
+  }, [state, callbackUrl]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -42,8 +49,6 @@ function LoginForm() {
           </h2>
 
           <form action={formAction} className="space-y-4">
-            <input type="hidden" name="redirectTo" value={callbackUrl} />
-
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">
                 Email
@@ -70,10 +75,10 @@ function LoginForm() {
               />
             </div>
 
-            {errorMessage && (
+            {state?.error && (
               <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm animate-fade-in">
                 <span>⚠</span>
-                {errorMessage}
+                {state.error}
               </div>
             )}
 
