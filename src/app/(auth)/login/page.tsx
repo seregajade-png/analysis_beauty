@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 function LoginForm() {
@@ -9,6 +9,13 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Если NextAuth вернул ошибку через редирект — показываем
+  useEffect(() => {
+    if (params.get("error")) {
+      setError("Неверный email или пароль");
+    }
+  }, [params]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,27 +29,26 @@ function LoginForm() {
       const csrfRes = await fetch("/api/auth/csrf");
       const { csrfToken } = await csrfRes.json();
 
-      // Прямой POST к NextAuth callback (обходим зависающий signIn из next-auth/react)
-      const res = await fetch("/api/auth/callback/credentials", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          email,
-          password,
-          csrfToken,
-          callbackUrl,
-        }),
-        redirect: "follow",
-      });
+      // Нативная отправка формы — браузер обработает 302 + Set-Cookie корректно
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "/api/auth/callback/credentials";
 
-      // Если редирект привёл на страницу с ошибкой — логин не удался
-      if (res.url.includes("/login") || res.url.includes("error")) {
-        setError("Неверный email или пароль");
-        setLoading(false);
-      } else {
-        // Сессионная cookie установлена, переходим
-        window.location.href = callbackUrl;
+      for (const [name, value] of Object.entries({
+        email,
+        password,
+        csrfToken,
+        callbackUrl,
+      })) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
       }
+
+      document.body.appendChild(form);
+      form.submit();
     } catch {
       setError("Ошибка входа");
       setLoading(false);
