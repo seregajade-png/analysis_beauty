@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const publicRoutes = ["/login", "/register", "/api/auth"];
+const publicRoutes = ["/login", "/register", "/api/auth", "/api/debug"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -13,7 +13,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Проверяем JWT-токен (лёгкая проверка, без Prisma)
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET });
 
   if (!token) {
     const loginUrl = new URL("/login", req.url);
