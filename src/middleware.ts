@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { decode } from "next-auth/jwt";
 
-const publicRoutes = ["/login", "/register", "/api/auth", "/api/login", "/api/debug"];
+const publicRoutes = ["/login", "/register", "/api/auth", "/api/login"];
 
 const COOKIE_NAMES = [
   "__Secure-authjs.session-token",
@@ -19,7 +19,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? "";
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    console.error("[MIDDLEWARE] AUTH_SECRET / NEXTAUTH_SECRET не задан");
+    const loginUrl = new URL("/login", req.url);
+    return NextResponse.redirect(loginUrl);
+  }
 
   // Пробуем все возможные имена cookie
   for (const cookieName of COOKIE_NAMES) {

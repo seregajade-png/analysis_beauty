@@ -7,12 +7,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: beautyuser
-      POSTGRES_PASSWORD: beautypass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-beautypass}
       POSTGRES_DB: beauty_analyzer
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U beautyuser -d beauty_analyzer"]
       interval: 10s
@@ -29,13 +29,14 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: "postgresql://beautyuser:beautypass@postgres:5432/beauty_analyzer"
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-beauty-analyzer-secret-key-change-in-production}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      DATABASE_URL: "postgresql://beautyuser:${POSTGRES_PASSWORD:-beautypass}@postgres:5432/beauty_analyzer"
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      AUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-https://beauty.natolisova.ru}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Beauty Call Analyzer}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      MAX_FILE_SIZE_MB: ${MAX_FILE_SIZE_MB:-100}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-BeautyChief}
+      NEXT_PUBLIC_APP_URL: ${NEXTAUTH_URL:-https://beauty.natolisova.ru}
     ports:
       - "3000:3000"
     volumes:

@@ -56,16 +56,27 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Hero Banner */}
-      <div className="hero-banner rounded-2xl mb-8 relative z-0">
-        <h1 className="heading-display text-3xl lg:text-4xl text-foreground relative z-10">
-          Дашборд
-        </h1>
-        <p className="mt-2 text-base text-muted-foreground relative z-10">
-          {isAdmin
-            ? `Добрый день, ${session.user.name?.split(" ")[0]}! Ваша панель диагностики`
-            : `Добрый день, ${session.user.name?.split(" ")[0]}! Панель управления и аналитики`}
-        </p>
+      {/* Hero Banner — Glass over gradient */}
+      <div className="relative rounded-2xl mb-8 overflow-hidden">
+        {/* Зелёный градиент — фон за стеклом */}
+        <div className="absolute inset-0" style={{background: "var(--gradient-emerald)"}} />
+        {/* Стекло поверх — без краёв */}
+        <div className="relative p-10 pb-16" style={{
+          background: "hsla(0, 0%, 100%, 0.12)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+        }}>
+          <div className="max-w-2xl">
+            <h1 className="heading-display text-3xl lg:text-4xl text-white">
+              Дашборд
+            </h1>
+            <p className="mt-2 text-base text-white/70">
+              {isAdmin
+                ? `Добрый день, ${session.user.name?.split(" ")[0]}! Ваша панель диагностики`
+                : `Добрый день, ${session.user.name?.split(" ")[0]}! Панель управления и аналитики`}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Stats */}
@@ -103,51 +114,59 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent calls */}
-        <div className="card-salon p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-heading font-bold text-xl text-foreground flex items-center gap-2">
-              <Phone size={18} className="text-primary" /> Последние звонки
-            </h3>
-            <Link
-              href="/analysis/calls"
-              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-            >
-              Все →
-            </Link>
-          </div>
-          {recentCalls.length === 0 ? (
-            <EmptyState
-              label="Нет анализов"
-              action={{ href: "/analysis/calls", label: "Загрузить звонок" }}
-            />
-          ) : (
-            <div className="space-y-1">
-              {recentCalls.map((call) => (
-                <Link
-                  key={call.id}
-                  href={`/analysis/calls?id=${call.id}`}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
-                      {call.title ?? call.audioFileName ?? "Звонок"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDateTime(call.createdAt)}
-                    </p>
-                  </div>
-                  {call.overallScore != null && (
-                    <span
-                      className={`text-xs font-bold px-2 py-1 rounded-lg border ${getScoreBg(call.overallScore)}`}
-                    >
-                      {formatScore(call.overallScore)}
-                    </span>
-                  )}
-                </Link>
-              ))}
+        {/* Recent calls — Glassmorphism */}
+        <div className="relative rounded-[1.25rem] overflow-hidden shadow-glass-panel" style={{background: "var(--gradient-emerald)"}}>
+          {/* Стеклянная карточка поверх градиента */}
+          <div className="glass-card-seamless p-6 relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
+                <Phone size={18} className="text-white/80" /> Последние звонки
+              </h3>
+              <Link
+                href="/analysis/calls"
+                className="text-xs text-white/70 hover:text-white font-medium transition-colors"
+              >
+                Все →
+              </Link>
             </div>
-          )}
+            {recentCalls.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-white/60 mb-3">Нет анализов</p>
+                <Link
+                  href="/analysis/calls"
+                  className="btn-primary-salon inline-flex items-center gap-1 text-xs"
+                >
+                  Загрузить звонок →
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {recentCalls.map((call) => (
+                  <Link
+                    key={call.id}
+                    href={`/analysis/calls?id=${call.id}`}
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-white/15 transition-colors group"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-white group-hover:text-white/90 transition-colors">
+                        {call.title ?? call.audioFileName ?? "Звонок"}
+                      </p>
+                      <p className="text-xs text-white/50">
+                        {formatDateTime(call.createdAt)}
+                      </p>
+                    </div>
+                    {call.overallScore != null && (
+                      <span
+                        className={`text-xs font-bold px-2.5 py-1 rounded-lg ${getScoreBg(call.overallScore)}`}
+                      >
+                        {formatScore(call.overallScore)}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Recent chats */}

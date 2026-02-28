@@ -29,7 +29,7 @@ async function callAI(
 ): Promise<string> {
   const response = await client.chat.completions.create({
     model: MODEL,
-    max_tokens: 3000,
+    max_tokens: 4096,
     temperature: 0,
     response_format: { type: "json_object" },
     messages: [

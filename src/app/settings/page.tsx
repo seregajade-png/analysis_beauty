@@ -86,14 +86,20 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">⚙</span>
-          Настройки
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Управление продуктами, кейсами и брендингом платформы
-        </p>
+      {/* Hero Banner — Peach Glassmorphism */}
+      <div className="relative rounded-2xl p-10 mb-6 overflow-hidden hero-banner-peach">
+        <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-[#DECCBD]/40 blur-3xl" />
+        <div className="absolute top-8 right-12 w-48 h-48 rounded-full bg-[#E8D5C4]/50 blur-3xl" />
+        <div className="absolute -bottom-12 left-1/3 w-56 h-56 rounded-full bg-[#F0DFD0]/40 blur-3xl" />
+        <div className="glass-card-convex p-8 relative z-10">
+          <h1 className="heading-display text-2xl lg:text-3xl text-[#63584e] flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-[#866E5B]/20 flex items-center justify-center">⚙</span>
+            Настройки
+          </h1>
+          <p className="text-[#746151] text-sm mt-2">
+            Управление продуктами, кейсами и брендингом платформы
+          </p>
+        </div>
       </div>
 
       <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit mb-6">

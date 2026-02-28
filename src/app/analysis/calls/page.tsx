@@ -97,14 +97,16 @@ export default function CallsPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Hero Banner */}
-      <div className="hero-banner rounded-2xl mb-8 relative z-0">
-        <h1 className="heading-display text-3xl lg:text-4xl text-foreground relative z-10">
-          Анализ звонков
-        </h1>
-        <p className="mt-2 text-base text-muted-foreground relative z-10">
-          Загрузите аудиозапись — AI транскрибирует и детально разберёт каждый этап продажи
-        </p>
+      {/* Hero Banner — Emerald Glassmorphism */}
+      <div className="relative rounded-2xl p-10 pb-16 mb-8 overflow-hidden hero-banner">
+        <div className="glass-card p-8 relative z-10 max-w-2xl">
+          <h1 className="heading-display text-3xl lg:text-4xl text-white">
+            Анализ звонков
+          </h1>
+          <p className="mt-2 text-base text-white/70">
+            Загрузите аудиозапись — AI транскрибирует и детально разберёт каждый этап продажи
+          </p>
+        </div>
       </div>
 
       {/* Табы */}

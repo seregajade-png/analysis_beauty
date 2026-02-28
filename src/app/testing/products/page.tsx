@@ -71,15 +71,18 @@ export default function ProductsTestPage() {
 
   if (step === "select") {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">◎</span>
-            Тест на знание продуктов (ХПВ)
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Выберите услугу и ответьте на 4 вопроса — AI проверит знание характеристик, выгод и работы с возражениями
-          </p>
+      <div className="max-w-4xl mx-auto">
+        {/* Hero Banner — Orange Glassmorphism */}
+        <div className="relative rounded-2xl p-10 pb-16 mb-6 overflow-hidden hero-banner-orange">
+          <div className="glass-card p-8 relative z-10 max-w-2xl">
+            <h1 className="heading-display text-2xl lg:text-3xl text-white flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">◎</span>
+              Тест на знание продуктов (ХПВ)
+            </h1>
+            <p className="text-white/70 text-sm mt-2">
+              Выберите услугу и ответьте на 4 вопроса — AI проверит знание характеристик, выгод и работы с возражениями
+            </p>
+          </div>
         </div>
 
         {products.length === 0 ? (
@@ -125,15 +128,17 @@ export default function ProductsTestPage() {
 
   if (step === "test" && selected) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <button onClick={() => setStep("select")} className="text-sm text-muted-foreground hover:text-foreground mb-3 flex items-center gap-1">
             ← Выбрать другой продукт
           </button>
-          <div className="hero-banner rounded-2xl relative z-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Тест на знание продукта</p>
-            <h2 className="text-xl font-bold font-heading text-foreground">{selected.name}</h2>
-            {selected.price && <p className="text-sm text-muted-foreground mt-0.5">{selected.price.toLocaleString("ru")} ₽</p>}
+          <div className="relative rounded-2xl p-6 pb-10 overflow-hidden hero-banner-orange">
+            <div className="glass-card p-5 relative z-10">
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-1">Тест на знание продукта</p>
+              <h2 className="text-xl font-bold font-heading text-white">{selected.name}</h2>
+              {selected.price && <p className="text-sm text-white/70 mt-0.5">{selected.price.toLocaleString("ru")} ₽</p>}
+            </div>
           </div>
         </div>
 

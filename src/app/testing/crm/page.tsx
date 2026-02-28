@@ -64,15 +64,18 @@ export default function CRMTestPage() {
 
   if (step === "test") {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">⊕</span>
-            Тест на работу с CRM
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Ответьте на вопросы о работе с клиентской базой — AI оценит системность и полноту подхода
-          </p>
+      <div className="max-w-4xl mx-auto">
+        {/* Hero Banner — Orange Glassmorphism */}
+        <div className="relative rounded-2xl p-10 pb-16 mb-6 overflow-hidden hero-banner-orange">
+          <div className="glass-card p-8 relative z-10 max-w-2xl">
+            <h1 className="heading-display text-2xl lg:text-3xl text-white flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">⊕</span>
+              Тест на работу с CRM
+            </h1>
+            <p className="text-white/70 text-sm mt-2">
+              Ответьте на вопросы о работе с клиентской базой — AI оценит системность и полноту подхода
+            </p>
+          </div>
         </div>
 
         {questions.length === 0 ? (

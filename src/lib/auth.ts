@@ -1,5 +1,6 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { compare, hash } from "bcryptjs";
 import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import type { UserRole } from "@prisma/client";
@@ -18,13 +19,47 @@ declare module "next-auth" {
   }
 }
 
-function hashPassword(password: string): string {
-  return createHash("sha256").update(password).digest("hex");
+const SHA256_HEX_RE = /^[a-f0-9]{64}$/;
+
+/** Проверяет пароль: сначала bcrypt, затем legacy SHA256 с авто-миграцией */
+async function verifyPassword(
+  password: string,
+  storedHash: string,
+  userId: string
+): Promise<boolean> {
+  // Новый формат — bcrypt ($2a$, $2b$)
+  if (storedHash.startsWith("$2")) {
+    return compare(password, storedHash);
+  }
+
+  // Legacy формат — SHA256 (64 hex символа)
+  if (SHA256_HEX_RE.test(storedHash)) {
+    const sha256Hash = createHash("sha256").update(password).digest("hex");
+    if (sha256Hash !== storedHash) return false;
+
+    // Авто-миграция: перехешируем в bcrypt
+    try {
+      const bcryptHash = await hash(password, 12);
+      await prisma.user.update({
+        where: { id: userId },
+        data: { password: bcryptHash },
+      });
+      console.log(`[AUTH] Migrated password to bcrypt for user ${userId}`);
+    } catch (err) {
+      console.error("[AUTH] Failed to migrate password:", err);
+    }
+    return true;
+  }
+
+  return false;
+}
+
+export async function hashPassword(password: string): Promise<string> {
+  return hash(password, 12);
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
-  // Не используем PrismaAdapter — работаем через JWT только
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
@@ -54,8 +89,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!user || !user.password) return null;
 
-        const hashedInput = hashPassword(password);
-        if (hashedInput !== user.password) return null;
+        const isValid = await verifyPassword(password, user.password, user.id);
+        if (!isValid) return null;
 
         return {
           id: user.id,

@@ -68,15 +68,18 @@ export default function ChatsPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">✉</span>
-          Анализ переписок
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Вставьте текст или загрузите скриншоты переписки — AI разберёт каждое сообщение
-        </p>
+    <div className="max-w-6xl mx-auto">
+      {/* Hero Banner — Emerald Glassmorphism */}
+      <div className="relative rounded-2xl p-10 pb-16 mb-6 overflow-hidden hero-banner">
+        <div className="glass-card p-8 relative z-10 max-w-2xl">
+          <h1 className="heading-display text-2xl lg:text-3xl text-white flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">✉</span>
+            Анализ переписок
+          </h1>
+          <p className="text-white/70 text-sm mt-2">
+            Вставьте текст или загрузите скриншоты переписки — AI разберёт каждое сообщение
+          </p>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-6">

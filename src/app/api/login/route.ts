@@ -1,11 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { compare, hash } from "bcryptjs";
 import { createHash } from "crypto";
 import { encode } from "next-auth/jwt";
 
-const SECRET = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? "";
+const SECRET = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+const SHA256_HEX_RE = /^[a-f0-9]{64}$/;
+
+/** Проверяет пароль: bcrypt или legacy SHA256 с авто-миграцией */
+async function verifyPassword(
+  password: string,
+  storedHash: string,
+  userId: string
+): Promise<boolean> {
+  if (storedHash.startsWith("$2")) {
+    return compare(password, storedHash);
+  }
+  if (SHA256_HEX_RE.test(storedHash)) {
+    const sha256Hash = createHash("sha256").update(password).digest("hex");
+    if (sha256Hash !== storedHash) return false;
+    try {
+      const bcryptHash = await hash(password, 12);
+      await prisma.user.update({
+        where: { id: userId },
+        data: { password: bcryptHash },
+      });
+      console.log(`[LOGIN] Migrated password to bcrypt for user ${userId}`);
+    } catch (err) {
+      console.error("[LOGIN] Failed to migrate password:", err);
+    }
+    return true;
+  }
+  return false;
+}
 
 export async function POST(req: NextRequest) {
+  if (!SECRET) {
+    console.error("[LOGIN] AUTH_SECRET / NEXTAUTH_SECRET не задан");
+    return NextResponse.json({ error: "Ошибка конфигурации сервера" }, { status: 500 });
+  }
+
   try {
     const { email, password } = await req.json();
 
@@ -21,8 +55,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Неверный email или пароль" }, { status: 401 });
     }
 
-    const hash = createHash("sha256").update(String(password)).digest("hex");
-    if (hash !== user.password) {
+    const isValid = await verifyPassword(String(password), user.password, user.id);
+    if (!isValid) {
       return NextResponse.json({ error: "Неверный email или пароль" }, { status: 401 });
     }
 

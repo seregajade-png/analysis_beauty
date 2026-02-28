@@ -47,15 +47,18 @@ export default function CasesPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">◈</span>
-          Практические кейсы
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Прочитайте ситуацию и напишите полный диалог — AI оценит вашу работу
-        </p>
+    <div className="max-w-6xl mx-auto">
+      {/* Hero Banner — Warm Glassmorphism */}
+      <div className="relative rounded-2xl p-10 pb-16 mb-6 overflow-hidden hero-banner-warm">
+        <div className="glass-card p-8 relative z-10 max-w-2xl">
+          <h1 className="heading-display text-2xl lg:text-3xl text-white flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">◈</span>
+            Практические кейсы
+          </h1>
+          <p className="text-white/70 text-sm mt-2">
+            Прочитайте ситуацию и напишите полный диалог — AI оценит вашу работу
+          </p>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-6">
@@ -90,13 +93,15 @@ export default function CasesPage() {
 
           {/* Кейс */}
           {selectedCase && (
-            <div className="hero-banner rounded-2xl relative z-0">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-primary">Ситуация</span>
-                <span className="text-xs text-muted-foreground">{"★".repeat(selectedCase.difficulty)}</span>
+            <div className="relative rounded-2xl p-6 pb-10 overflow-hidden hero-banner-warm">
+              <div className="glass-card p-5 relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-white/60">Ситуация</span>
+                  <span className="text-xs text-white/50">{"★".repeat(selectedCase.difficulty)}</span>
+                </div>
+                <h3 className="font-bold text-lg mb-2 text-white">{selectedCase.title}</h3>
+                <p className="text-sm text-white/70 leading-relaxed">{selectedCase.scenario}</p>
               </div>
-              <h3 className="font-bold text-lg mb-2 text-foreground">{selectedCase.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{selectedCase.scenario}</p>
             </div>
           )}
 

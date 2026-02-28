@@ -115,16 +115,21 @@ export default function AdminCardPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">◉</span>
-            Карточка администратора
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Сводная оценка навыков на основе всех проведённых анализов и тестов
-          </p>
-        </div>
+      {/* Hero Banner — Warm Glassmorphism */}
+      <div className="relative rounded-2xl p-10 mb-6 overflow-hidden hero-banner-warm">
+        <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-[#DECCBD]/50 blur-3xl" />
+        <div className="absolute top-8 right-12 w-48 h-48 rounded-full bg-[#C09C7E]/40 blur-3xl" />
+        <div className="absolute -bottom-12 left-1/3 w-56 h-56 rounded-full bg-[#866E5B]/30 blur-3xl" />
+        <div className="glass-card p-8 relative z-10 flex items-start justify-between">
+          <div>
+            <h1 className="heading-display text-2xl lg:text-3xl text-white flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">◉</span>
+              Карточка администратора
+            </h1>
+            <p className="text-white/70 text-sm mt-2">
+              Сводная оценка навыков на основе всех проведённых анализов и тестов
+            </p>
+          </div>
 
         {/* Действия */}
         <div className="flex items-center gap-2">
@@ -134,10 +139,10 @@ export default function AdminCardPage() {
                 const found = history.find((h) => h.id === e.target.value);
                 if (found) setCard(found);
               }}
-              className="px-3 py-2 rounded-xl border border-border text-sm focus:outline-none"
+              className="px-3 py-2 rounded-xl border border-white/30 bg-white/10 text-white text-sm focus:outline-none"
             >
               {history.map((h, i) => (
-                <option key={h.id} value={h.id}>
+                <option key={h.id} value={h.id} className="text-foreground">
                   {i === 0 ? "Последняя" : formatDate(h.createdAt)}
                 </option>
               ))}
@@ -146,7 +151,7 @@ export default function AdminCardPage() {
           <button
             onClick={generateCard}
             disabled={generating}
-            className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/80 text-white text-sm font-medium transition-all disabled:opacity-40"
+            className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all disabled:opacity-40"
           >
             {generating ? "⟳ Генерирую..." : "⟳ Обновить"}
           </button>
@@ -154,7 +159,7 @@ export default function AdminCardPage() {
             <>
               <button
                 onClick={exportPDF}
-                className="px-4 py-2 rounded-xl border border-border text-sm hover:bg-muted transition-all"
+                className="px-4 py-2 rounded-xl border border-white/30 text-white text-sm hover:bg-white/10 transition-all"
               >
                 ↓ PDF
               </button>
@@ -162,14 +167,15 @@ export default function AdminCardPage() {
                 onClick={toggleShare}
                 className={`px-4 py-2 rounded-xl border text-sm transition-all ${
                   card.isShared
-                    ? "border-primary bg-mint/20 text-primary"
-                    : "border-border hover:bg-muted"
+                    ? "border-white/50 bg-white/20 text-white"
+                    : "border-white/30 text-white hover:bg-white/10"
                 }`}
               >
                 {card.isShared ? "✓ Ссылка активна" : "⇗ Поделиться"}
               </button>
             </>
           )}
+        </div>
         </div>
       </div>
 
@@ -208,32 +214,36 @@ export default function AdminCardPage() {
           {/* Левая панель */}
           <div className="lg:col-span-1 space-y-4">
             {/* Профиль */}
-            <div className="hero-banner rounded-2xl relative z-0">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
-                  {card.adminName[0]}
+            <div className="relative rounded-2xl p-6 overflow-hidden hero-banner-warm">
+              <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-[#DECCBD]/50 blur-3xl" />
+              <div className="absolute -bottom-8 right-4 w-32 h-32 rounded-full bg-[#C09C7E]/40 blur-3xl" />
+              <div className="glass-card p-5 relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold text-white">
+                    {card.adminName[0]}
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg text-white">{card.adminName}</p>
+                    {card.salonName && <p className="text-sm text-white/70">{card.salonName}</p>}
+                    <p className="text-xs text-white/50">{formatDate(card.createdAt)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-lg text-foreground">{card.adminName}</p>
-                  {card.salonName && <p className="text-sm text-muted-foreground">{card.salonName}</p>}
-                  <p className="text-xs text-muted-foreground">{formatDate(card.createdAt)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">Общая оценка</p>
-                  <p className="text-4xl font-bold text-foreground">
-                    {formatScore(card.overallScore ?? null)}
-                    <span className="text-xl text-muted-foreground">/10</span>
-                  </p>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{getScoreLabel(card.overallScore ?? 0)}</p>
-                  {card.callSummary && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {card.callSummary.totalCalls} звонков · ср. {formatScore(card.callSummary.avgScore)}
+                <div className="flex items-center gap-3">
+                  <div>
+                    <p className="text-xs text-white/60">Общая оценка</p>
+                    <p className="text-4xl font-bold text-white">
+                      {formatScore(card.overallScore ?? null)}
+                      <span className="text-xl text-white/60">/10</span>
                     </p>
-                  )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white">{getScoreLabel(card.overallScore ?? 0)}</p>
+                    {card.callSummary && (
+                      <p className="text-xs text-white/60 mt-1">
+                        {card.callSummary.totalCalls} звонков · ср. {formatScore(card.callSummary.avgScore)}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

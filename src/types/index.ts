@@ -18,12 +18,28 @@ export interface StageIssue {
   severity: "critical" | "warning" | "info";
 }
 
+export type ClientPsychotype = "triangle" | "square" | "circle" | "zigzag" | "mixed";
+
+export interface PsychotypeAnalysis {
+  type: ClientPsychotype;
+  signs: string;
+  adaptationScore: number;
+  adaptationComment: string;
+}
+
+export interface ToxicWordEntry {
+  original: string;
+  ecological: string;
+}
+
 export interface CallAnalysisResult {
   overallScore: number;
   duration?: string;
   summary: string;
+  clientPsychotype?: PsychotypeAnalysis;
   strengths: string[];
   criticalErrors: StageIssue[];
+  toxicWords?: ToxicWordEntry[];
   stages: SalesStage[];
   developmentPlan: DevelopmentItem[];
   parasiteWords?: string[];
@@ -31,11 +47,20 @@ export interface CallAnalysisResult {
   confidenceLevel?: string;
 }
 
+export interface ChatRuleViolation {
+  rule: string;
+  example: string;
+  recommendation: string;
+}
+
 export interface ChatAnalysisResult {
   overallScore: number;
   summary: string;
+  clientPsychotype?: PsychotypeAnalysis;
   strengths: string[];
   criticalErrors: ChatIssue[];
+  toxicWords?: ToxicWordEntry[];
+  chatRulesViolations?: ChatRuleViolation[];
   stages: SalesStage[];
   messageAnalysis: MessageAnalysis[];
   additionalMetrics: ChatMetrics;
@@ -61,6 +86,8 @@ export interface ChatMetrics {
   literacy?: string;
   closingAttempt?: string;
   personalization?: string;
+  followUp?: string;
+  summaryProvided?: string;
 }
 
 export interface DevelopmentItem {

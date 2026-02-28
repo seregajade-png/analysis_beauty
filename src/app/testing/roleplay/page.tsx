@@ -97,15 +97,18 @@ export default function RoleplayPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold font-heading text-foreground flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white">▷</span>
-          Мини-ролевая игра
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Ответьте на фразу клиента голосом — AI оценит уверенность, интонацию и структуру
-        </p>
+    <div className="max-w-6xl mx-auto">
+      {/* Hero Banner — Emerald Glassmorphism */}
+      <div className="relative rounded-2xl p-10 pb-16 mb-6 overflow-hidden hero-banner">
+        <div className="glass-card p-8 relative z-10 max-w-2xl">
+          <h1 className="heading-display text-2xl lg:text-3xl text-white flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">▷</span>
+            Мини-ролевая игра
+          </h1>
+          <p className="text-white/70 text-sm mt-2">
+            Ответьте на фразу клиента голосом — AI оценит уверенность, интонацию и структуру
+          </p>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-6">
@@ -134,12 +137,14 @@ export default function RoleplayPage() {
 
           {/* Ситуация */}
           {selected && (
-            <div className="hero-banner rounded-2xl relative z-0">
-              <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-2">Клиент говорит:</p>
-              <p className="text-lg font-medium leading-relaxed text-foreground">«{selected.clientPhrase}»</p>
-              {selected.context && (
-                <p className="text-xs text-muted-foreground mt-2 italic">{selected.context}</p>
-              )}
+            <div className="relative rounded-2xl p-6 pb-10 overflow-hidden hero-banner">
+              <div className="glass-card p-5 relative z-10">
+                <p className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-2">Клиент говорит:</p>
+                <p className="text-lg font-medium leading-relaxed text-white">«{selected.clientPhrase}»</p>
+                {selected.context && (
+                  <p className="text-xs text-white/50 mt-2 italic">{selected.context}</p>
+                )}
+              </div>
             </div>
           )}
 
