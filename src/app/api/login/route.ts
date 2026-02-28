@@ -61,7 +61,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Создаём JWT в том же формате, что и NextAuth (JWE)
-    const isSecure = req.url.startsWith("https");
+    const isSecure =
+      req.headers.get("x-forwarded-proto") === "https" ||
+      req.url.startsWith("https");
     const cookieName = isSecure
       ? "__Secure-authjs.session-token"
       : "authjs.session-token";
