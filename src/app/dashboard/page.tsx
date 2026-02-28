@@ -114,10 +114,8 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent calls — Glassmorphism */}
-        <div className="relative rounded-[1.25rem] overflow-hidden shadow-glass-panel" style={{background: "var(--gradient-emerald)"}}>
-          {/* Стеклянная карточка поверх градиента */}
-          <div className="glass-card-seamless p-6 relative z-10">
+        {/* Recent calls — Emerald gradient card */}
+        <div className="rounded-[1.25rem] overflow-hidden shadow-glass-panel p-6" style={{background: "var(--gradient-emerald)"}}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-heading font-bold text-xl text-white flex items-center gap-2">
                 <Phone size={18} className="text-white/80" /> Последние звонки
@@ -166,7 +164,6 @@ export default async function DashboardPage() {
                 ))}
               </div>
             )}
-          </div>
         </div>
 
         {/* Recent chats */}
