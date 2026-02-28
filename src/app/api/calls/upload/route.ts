@@ -6,7 +6,9 @@ import path from "path";
 import { ALLOWED_AUDIO_TYPES, MAX_AUDIO_SIZE } from "@/lib/audio/transcribe";
 
 export async function POST(req: NextRequest) {
+  console.log("[UPLOAD] POST received");
   const session = await auth();
+  console.log("[UPLOAD] session:", session?.user?.id ?? "null");
   if (!session?.user) {
     return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
   }

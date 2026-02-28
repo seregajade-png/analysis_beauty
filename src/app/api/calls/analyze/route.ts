@@ -10,7 +10,9 @@ import { readFile } from "fs/promises";
 import path from "path";
 
 export async function POST(req: NextRequest) {
+  console.log("[ANALYZE] POST received, cookies:", req.cookies.getAll().map(c => c.name));
   const session = await auth();
+  console.log("[ANALYZE] session:", session?.user?.id ?? "null");
   if (!session?.user) {
     return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
   }
