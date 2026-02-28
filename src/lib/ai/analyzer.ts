@@ -1,4 +1,3 @@
-import OpenAI from "openai";
 import {
   CALL_ANALYSIS_SYSTEM_PROMPT,
   CHAT_ANALYSIS_SYSTEM_PROMPT,
@@ -16,10 +15,7 @@ import type {
   ProductTestAnalysisResult,
   CRMTestAnalysisResult,
 } from "@/types";
-
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { openai as client } from "@/lib/openai-client";
 
 const MODEL = "gpt-4o";
 

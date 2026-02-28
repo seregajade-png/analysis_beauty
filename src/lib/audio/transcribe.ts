@@ -1,15 +1,12 @@
-import OpenAI, { toFile } from "openai";
+import { toFile } from "openai";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffmpeg from "fluent-ffmpeg";
 import { writeFile, unlink, readFile } from "fs/promises";
 import path from "path";
 import os from "os";
+import { openai } from "@/lib/openai-client";
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export interface TranscriptionResult {
   text: string;
