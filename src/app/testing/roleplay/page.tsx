@@ -99,10 +99,10 @@ export default function RoleplayPage() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Hero Banner — Emerald Glassmorphism */}
-      <div className="relative rounded-2xl p-10 pb-16 mb-6 overflow-hidden hero-banner">
-        <div className="glass-card p-8 relative z-10 max-w-2xl">
-          <h1 className="heading-display text-2xl lg:text-3xl text-white flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">▷</span>
+      <div className="relative rounded-2xl p-6 pb-10 md:p-10 md:pb-16 mb-6 overflow-hidden hero-banner">
+        <div className="glass-card p-5 md:p-8 relative z-10 max-w-2xl">
+          <h1 className="heading-display text-xl md:text-2xl lg:text-3xl text-white flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">▷</span>
             Мини-ролевая игра
           </h1>
           <p className="text-white/70 text-sm mt-2">

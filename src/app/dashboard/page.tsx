@@ -61,13 +61,13 @@ export default async function DashboardPage() {
         {/* Зелёный градиент — фон за стеклом */}
         <div className="absolute inset-0" style={{background: "var(--gradient-emerald)"}} />
         {/* Стекло поверх — без краёв */}
-        <div className="relative p-10 pb-16" style={{
+        <div className="relative p-6 pb-10 md:p-10 md:pb-16" style={{
           background: "hsla(0, 0%, 100%, 0.12)",
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
         }}>
           <div className="max-w-2xl">
-            <h1 className="heading-display text-3xl lg:text-4xl text-white">
+            <h1 className="heading-display text-2xl md:text-3xl lg:text-4xl text-white">
               Дашборд
             </h1>
             <p className="mt-2 text-base text-white/70">
@@ -217,7 +217,7 @@ export default async function DashboardPage() {
       {/* Quick actions */}
       <div className="mt-8">
         <h3 className="font-heading font-bold text-xl text-foreground mb-4">Начать тест</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { href: "/testing/cases", label: "Практический кейс", icon: FlaskConical },
             { href: "/testing/roleplay", label: "Ролевая игра", icon: Gamepad2 },

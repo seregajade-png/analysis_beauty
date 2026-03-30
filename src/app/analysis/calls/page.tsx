@@ -53,25 +53,20 @@ export default function CallsPage() {
       fd.append("adminName", adminName);
       fd.append("title", title || file.name);
 
-      const uploadRes = await fetch("/api/calls/upload", { method: "POST", body: fd });
-      if (!uploadRes.ok) throw new Error("Ошибка загрузки");
-      const { id } = await uploadRes.json();
-
       setStep("transcribing");
 
-      const analyzeRes = await fetch("/api/calls/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ analysisId: id }),
-      });
-      if (!analyzeRes.ok) throw new Error("Ошибка анализа");
-      const data = await analyzeRes.json();
+      const res = await fetch("/api/calls/analyze", { method: "POST", body: fd });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Неизвестная ошибка" }));
+        throw new Error(err.error || "Ошибка анализа");
+      }
+      const data = await res.json();
 
       setStep("done");
       setResult({ ...data.analysis, analysisResult: data.result });
     } catch (err) {
       console.error(err);
-      alert("Произошла ошибка. Проверьте API ключи.");
+      alert(err instanceof Error ? err.message : "Произошла ошибка");
       setStep("idle");
     } finally {
       setLoading(false);
@@ -98,9 +93,9 @@ export default function CallsPage() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Hero Banner — Emerald Glassmorphism */}
-      <div className="relative rounded-2xl p-10 pb-16 mb-8 overflow-hidden hero-banner">
-        <div className="glass-card p-8 relative z-10 max-w-2xl">
-          <h1 className="heading-display text-3xl lg:text-4xl text-white">
+      <div className="relative rounded-2xl p-6 pb-10 md:p-10 md:pb-16 mb-6 md:mb-8 overflow-hidden hero-banner">
+        <div className="glass-card p-5 md:p-8 relative z-10 max-w-2xl">
+          <h1 className="heading-display text-xl md:text-3xl lg:text-4xl text-white">
             Анализ звонков
           </h1>
           <p className="mt-2 text-base text-white/70">

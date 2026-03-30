@@ -85,15 +85,15 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {/* Hero Banner — Peach Glassmorphism */}
-      <div className="relative rounded-2xl p-10 mb-6 overflow-hidden hero-banner-peach">
+      <div className="relative rounded-2xl p-6 md:p-10 mb-6 overflow-hidden hero-banner-peach">
         <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-[#DECCBD]/40 blur-3xl" />
         <div className="absolute top-8 right-12 w-48 h-48 rounded-full bg-[#E8D5C4]/50 blur-3xl" />
         <div className="absolute -bottom-12 left-1/3 w-56 h-56 rounded-full bg-[#F0DFD0]/40 blur-3xl" />
-        <div className="glass-card-convex p-8 relative z-10">
-          <h1 className="heading-display text-2xl lg:text-3xl text-[#63584e] flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-[#866E5B]/20 flex items-center justify-center">⚙</span>
+        <div className="glass-card-convex p-5 md:p-8 relative z-10">
+          <h1 className="heading-display text-xl md:text-2xl lg:text-3xl text-[#63584e] flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-[#866E5B]/20 flex items-center justify-center shrink-0">⚙</span>
             Настройки
           </h1>
           <p className="text-[#746151] text-sm mt-2">
@@ -118,7 +118,7 @@ export default function SettingsPage() {
 
       {tab === "products" && (
         <div>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
             <p className="text-sm text-muted-foreground">
               {products.length} продуктов · используются в ХПВ-тестировании
             </p>
@@ -170,7 +170,7 @@ export default function SettingsPage() {
                     </button>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3 text-xs text-muted-foreground mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-muted-foreground mt-3">
                   <div>
                     <p className="font-medium text-foreground mb-0.5">Характеристики</p>
                     <p className="line-clamp-2">{p.characteristics}</p>
@@ -237,7 +237,7 @@ export default function SettingsPage() {
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Название *</label>
                   <input

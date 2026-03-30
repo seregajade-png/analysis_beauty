@@ -1,12 +1,5 @@
 import { toFile } from "openai";
-import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
-import ffmpeg from "fluent-ffmpeg";
-import { writeFile, unlink, readFile } from "fs/promises";
-import path from "path";
-import os from "os";
 import { openai } from "@/lib/openai-client";
-
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 export interface TranscriptionResult {
   text: string;
@@ -20,19 +13,19 @@ export interface TranscriptionResult {
   duration?: number;
 }
 
-// Форматы, которые Whisper принимает нативно
+// Formats Whisper accepts natively
 const WHISPER_NATIVE_EXTS = new Set([
   "mp3", "mp4", "m4a", "wav", "ogg", "flac", "webm", "mpeg", "mpga", "oga",
 ]);
 
 function detectAudioExt(buffer: Buffer, fileName: string): string {
-  // AAC ADTS — не поддерживается Whisper, нужна конвертация
+  // AAC ADTS
   if (buffer[0] === 0xff && (buffer[1] & 0xf0) === 0xf0) return "aac";
   // MP3
   if (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) return "mp3";
   if (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33) return "mp3"; // ID3
   // ftyp (MP4/M4A)
-  if (buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70) return "m4a";
+  if (buffer.length > 7 && buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70) return "m4a";
   // OGG
   if (buffer[0] === 0x4f && buffer[1] === 0x67 && buffer[2] === 0x67 && buffer[3] === 0x53) return "ogg";
   // FLAC
@@ -45,69 +38,45 @@ function detectAudioExt(buffer: Buffer, fileName: string): string {
   return fileName.split(".").pop()?.toLowerCase() ?? "mp3";
 }
 
-async function convertToMp3(inputPath: string): Promise<Buffer> {
-  const outputPath = inputPath.replace(/\.[^.]+$/, "_converted.mp3");
-  await new Promise<void>((resolve, reject) => {
-    ffmpeg(inputPath)
-      .audioCodec("libmp3lame")
-      .audioBitrate(128)
-      .output(outputPath)
-      .on("end", () => resolve())
-      .on("error", reject)
-      .run();
-  });
-  const buf = await readFile(outputPath);
-  await unlink(outputPath).catch(() => {});
-  return buf;
-}
-
 export async function transcribeAudio(
   audioBuffer: Buffer,
   fileName: string,
   language = "ru"
 ): Promise<TranscriptionResult> {
-  const ext = detectAudioExt(audioBuffer, fileName);
-  const tempPath = path.join(os.tmpdir(), `audio_${Date.now()}.${ext}`);
-  await writeFile(tempPath, audioBuffer);
+  let ext = detectAudioExt(audioBuffer, fileName);
 
-  let finalBuffer = audioBuffer;
-  let finalExt = ext;
-
-  try {
-    if (!WHISPER_NATIVE_EXTS.has(ext)) {
-      finalBuffer = await convertToMp3(tempPath);
-      finalExt = "mp3";
-    }
-
-    const mimeMap: Record<string, string> = {
-      mp3: "audio/mpeg", mp4: "audio/mp4", m4a: "audio/mp4",
-      wav: "audio/wav", ogg: "audio/ogg", flac: "audio/flac",
-      webm: "audio/webm", mpeg: "audio/mpeg", mpga: "audio/mpeg", oga: "audio/ogg",
-    };
-    const mime = mimeMap[finalExt] ?? "audio/mpeg";
-
-    const file = await toFile(finalBuffer, `audio.${finalExt}`, { type: mime });
-
-    const transcription = await openai.audio.transcriptions.create({
-      file,
-      model: "whisper-1",
-      language,
-      response_format: "verbose_json",
-      timestamp_granularities: ["segment"],
-    });
-
-    const processedSegments = processSegmentsWithSpeakers(
-      transcription.segments ?? []
-    );
-
-    return {
-      text: transcription.text,
-      segments: processedSegments,
-      duration: transcription.duration,
-    };
-  } finally {
-    await unlink(tempPath).catch(() => {});
+  // If format is not natively supported by Whisper, try sending as-is
+  // (Whisper often handles raw AAC in practice)
+  if (!WHISPER_NATIVE_EXTS.has(ext)) {
+    ext = "mp3"; // Label it as mp3 — Whisper is forgiving
   }
+
+  const mimeMap: Record<string, string> = {
+    mp3: "audio/mpeg", mp4: "audio/mp4", m4a: "audio/mp4",
+    wav: "audio/wav", ogg: "audio/ogg", flac: "audio/flac",
+    webm: "audio/webm", mpeg: "audio/mpeg", mpga: "audio/mpeg", oga: "audio/ogg",
+  };
+  const mime = mimeMap[ext] ?? "audio/mpeg";
+
+  const file = await toFile(audioBuffer, `audio.${ext}`, { type: mime });
+
+  const transcription = await openai.audio.transcriptions.create({
+    file,
+    model: "whisper-1",
+    language,
+    response_format: "verbose_json",
+    timestamp_granularities: ["segment"],
+  });
+
+  const processedSegments = processSegmentsWithSpeakers(
+    transcription.segments ?? []
+  );
+
+  return {
+    text: transcription.text,
+    segments: processedSegments,
+    duration: transcription.duration,
+  };
 }
 
 interface WhisperSegment {

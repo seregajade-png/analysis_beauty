@@ -110,17 +110,17 @@ function LoginForm() {
               Тестовые аккаунты:
             </p>
             <div className="space-y-1.5 text-xs text-muted-foreground">
-              <div className="flex justify-between px-3 py-1.5 bg-muted/50 rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:justify-between px-3 py-1.5 bg-muted/50 rounded-lg gap-0.5">
                 <span className="font-medium">Владелец</span>
-                <span>owner@beauty-school.ru / password123</span>
+                <span className="truncate">owner@beauty-school.ru / password123</span>
               </div>
-              <div className="flex justify-between px-3 py-1.5 bg-muted/50 rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:justify-between px-3 py-1.5 bg-muted/50 rounded-lg gap-0.5">
                 <span className="font-medium">Менеджер</span>
-                <span>manager@beauty-school.ru / password123</span>
+                <span className="truncate">manager@beauty-school.ru / password123</span>
               </div>
-              <div className="flex justify-between px-3 py-1.5 bg-muted/50 rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:justify-between px-3 py-1.5 bg-muted/50 rounded-lg gap-0.5">
                 <span className="font-medium">Администратор</span>
-                <span>admin@beauty-school.ru / password123</span>
+                <span className="truncate">admin@beauty-school.ru / password123</span>
               </div>
             </div>
           </div>

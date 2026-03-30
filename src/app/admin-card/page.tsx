@@ -114,80 +114,82 @@ export default function AdminCardPage() {
   })) ?? [];
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Hero Banner — Warm Glassmorphism */}
-      <div className="relative rounded-2xl p-10 mb-6 overflow-hidden hero-banner-warm">
+      <div className="relative rounded-2xl p-6 md:p-10 mb-6 overflow-hidden hero-banner-warm">
         <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-[#DECCBD]/50 blur-3xl" />
         <div className="absolute top-8 right-12 w-48 h-48 rounded-full bg-[#C09C7E]/40 blur-3xl" />
         <div className="absolute -bottom-12 left-1/3 w-56 h-56 rounded-full bg-[#866E5B]/30 blur-3xl" />
-        <div className="glass-card p-8 relative z-10 flex items-start justify-between">
-          <div>
-            <h1 className="heading-display text-2xl lg:text-3xl text-white flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">◉</span>
-              Карточка администратора
-            </h1>
-            <p className="text-white/70 text-sm mt-2">
-              Сводная оценка навыков на основе всех проведённых анализов и тестов
-            </p>
-          </div>
+        <div className="glass-card p-5 md:p-8 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+              <h1 className="heading-display text-xl md:text-2xl lg:text-3xl text-white flex items-center gap-3">
+                <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">◉</span>
+                Карточка администратора
+              </h1>
+              <p className="text-white/70 text-sm mt-2">
+                Сводная оценка навыков на основе всех проведённых анализов и тестов
+              </p>
+            </div>
 
-        {/* Действия */}
-        <div className="flex items-center gap-2">
-          {history.length > 1 && (
-            <select
-              onChange={(e) => {
-                const found = history.find((h) => h.id === e.target.value);
-                if (found) setCard(found);
-              }}
-              className="px-3 py-2 rounded-xl border border-white/30 bg-white/10 text-white text-sm focus:outline-none"
-            >
-              {history.map((h, i) => (
-                <option key={h.id} value={h.id} className="text-foreground">
-                  {i === 0 ? "Последняя" : formatDate(h.createdAt)}
-                </option>
-              ))}
-            </select>
-          )}
-          <button
-            onClick={generateCard}
-            disabled={generating}
-            className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all disabled:opacity-40"
-          >
-            {generating ? "⟳ Генерирую..." : "⟳ Обновить"}
-          </button>
-          {card && (
-            <>
+            {/* Действия */}
+            <div className="flex flex-wrap items-center gap-2">
+              {history.length > 1 && (
+                <select
+                  onChange={(e) => {
+                    const found = history.find((h) => h.id === e.target.value);
+                    if (found) setCard(found);
+                  }}
+                  className="px-3 py-2 rounded-xl border border-white/30 bg-white/10 text-white text-sm focus:outline-none"
+                >
+                  {history.map((h, i) => (
+                    <option key={h.id} value={h.id} className="text-foreground">
+                      {i === 0 ? "Последняя" : formatDate(h.createdAt)}
+                    </option>
+                  ))}
+                </select>
+              )}
               <button
-                onClick={exportPDF}
-                className="px-4 py-2 rounded-xl border border-white/30 text-white text-sm hover:bg-white/10 transition-all"
+                onClick={generateCard}
+                disabled={generating}
+                className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all disabled:opacity-40"
               >
-                ↓ PDF
+                {generating ? "⟳ Генерирую..." : "⟳ Обновить"}
               </button>
-              <button
-                onClick={toggleShare}
-                className={`px-4 py-2 rounded-xl border text-sm transition-all ${
-                  card.isShared
-                    ? "border-white/50 bg-white/20 text-white"
-                    : "border-white/30 text-white hover:bg-white/10"
-                }`}
-              >
-                {card.isShared ? "✓ Ссылка активна" : "⇗ Поделиться"}
-              </button>
-            </>
-          )}
-        </div>
+              {card && (
+                <>
+                  <button
+                    onClick={exportPDF}
+                    className="px-4 py-2 rounded-xl border border-white/30 text-white text-sm hover:bg-white/10 transition-all"
+                  >
+                    ↓ PDF
+                  </button>
+                  <button
+                    onClick={toggleShare}
+                    className={`px-4 py-2 rounded-xl border text-sm transition-all ${
+                      card.isShared
+                        ? "border-white/50 bg-white/20 text-white"
+                        : "border-white/30 text-white hover:bg-white/10"
+                    }`}
+                  >
+                    {card.isShared ? "✓ Ссылка активна" : "⇗ Поделиться"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {shareUrl && (
-        <div className="mb-4 p-3 rounded-xl bg-mint/20 border border-primary/20 flex items-center justify-between">
-          <span className="text-sm text-primary font-medium">Ссылка для просмотра:</span>
-          <a href={shareUrl} target="_blank" className="text-sm text-primary underline truncate max-w-xs">
+        <div className="mb-4 p-3 rounded-xl bg-mint/20 border border-primary/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <span className="text-sm text-primary font-medium shrink-0">Ссылка:</span>
+          <a href={shareUrl} target="_blank" className="text-sm text-primary underline truncate max-w-full sm:max-w-xs">
             {shareUrl}
           </a>
           <button
             onClick={() => navigator.clipboard.writeText(shareUrl)}
-            className="text-xs text-primary hover:underline ml-2"
+            className="text-xs text-primary hover:underline shrink-0"
           >
             Копировать
           </button>

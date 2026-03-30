@@ -8,7 +8,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <SessionProvider>
       <div className="min-h-screen bg-background">
         <Sidebar />
-        <main className="ml-64 p-8 lg:p-12">
+        <main className="md:ml-64 pt-14 md:pt-0 p-4 md:p-8 lg:p-12">
           {children}
         </main>
       </div>

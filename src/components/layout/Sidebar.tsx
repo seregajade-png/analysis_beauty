@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   Phone,
@@ -15,6 +17,8 @@ import {
   UserCircle,
   Settings,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 
 const navItems = [
@@ -50,6 +54,9 @@ const ownerManagerItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+
   const isOwnerOrManager =
     session?.user?.role === "OWNER" || session?.user?.role === "MANAGER";
 
@@ -60,17 +67,37 @@ export function Sidebar() {
       ? "Менеджер"
       : "Администратор";
 
-  return (
-    <aside className="fixed left-0 top-0 h-screen w-64 card-salon border-r border-border flex flex-col z-50">
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isMobile && open) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [isMobile, open]);
+
+  const sidebarContent = (
+    <>
       {/* Logo */}
-      <div className="p-8 pb-6">
-        <h2 className="heading-display text-2xl text-foreground tracking-wide">
-          Beauty
-          <span className="text-primary"> AI</span>
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1 font-body">
-          {session?.user?.salonName ?? "Аналитика салона"}
-        </p>
+      <div className="p-8 pb-6 flex items-center justify-between">
+        <div>
+          <h2 className="heading-display text-2xl text-foreground tracking-wide">
+            Beauty
+            <span className="text-primary"> AI</span>
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1 font-body">
+            {session?.user?.salonName ?? "Аналитика салона"}
+          </p>
+        </div>
+        {isMobile && (
+          <button onClick={() => setOpen(false)} className="p-2 -mr-2 text-muted-foreground hover:text-foreground">
+            <X size={24} />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -156,6 +183,48 @@ export function Sidebar() {
           Выйти
         </button>
       </div>
+    </>
+  );
+
+  // Mobile: hamburger button + overlay drawer
+  if (isMobile) {
+    return (
+      <>
+        {/* Top bar with hamburger */}
+        <header className="fixed top-0 left-0 right-0 h-14 bg-background/80 backdrop-blur-md border-b border-border flex items-center px-4 z-50">
+          <button onClick={() => setOpen(true)} className="p-2 -ml-2 text-foreground">
+            <Menu size={24} />
+          </button>
+          <h2 className="heading-display text-lg text-foreground tracking-wide ml-3">
+            Beauty<span className="text-primary"> AI</span>
+          </h2>
+        </header>
+
+        {/* Overlay */}
+        {open && (
+          <div
+            className="fixed inset-0 bg-black/50 z-[60] animate-in fade-in duration-200"
+            onClick={() => setOpen(false)}
+          />
+        )}
+
+        {/* Drawer */}
+        <aside
+          className={cn(
+            "fixed left-0 top-0 h-screen w-72 card-salon border-r border-border flex flex-col z-[70] transition-transform duration-300 ease-in-out",
+            open ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          {sidebarContent}
+        </aside>
+      </>
+    );
+  }
+
+  // Desktop: fixed sidebar
+  return (
+    <aside className="fixed left-0 top-0 h-screen w-64 card-salon border-r border-border flex flex-col z-50">
+      {sidebarContent}
     </aside>
   );
 }
