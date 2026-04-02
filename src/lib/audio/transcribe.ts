@@ -13,44 +13,17 @@ export interface TranscriptionResult {
   duration?: number;
 }
 
-// Formats Whisper accepts natively
 const WHISPER_NATIVE_EXTS = new Set([
   "mp3", "mp4", "m4a", "wav", "ogg", "flac", "webm", "mpeg", "mpga", "oga",
 ]);
-
-function detectAudioExt(buffer: Buffer, fileName: string): string {
-  // AAC ADTS
-  if (buffer[0] === 0xff && (buffer[1] & 0xf0) === 0xf0) return "aac";
-  // MP3
-  if (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) return "mp3";
-  if (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33) return "mp3"; // ID3
-  // ftyp (MP4/M4A)
-  if (buffer.length > 7 && buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70) return "m4a";
-  // OGG
-  if (buffer[0] === 0x4f && buffer[1] === 0x67 && buffer[2] === 0x67 && buffer[3] === 0x53) return "ogg";
-  // FLAC
-  if (buffer[0] === 0x66 && buffer[1] === 0x4c && buffer[2] === 0x61 && buffer[3] === 0x43) return "flac";
-  // RIFF (WAV)
-  if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) return "wav";
-  // WebM
-  if (buffer[0] === 0x1a && buffer[1] === 0x45) return "webm";
-
-  return fileName.split(".").pop()?.toLowerCase() ?? "mp3";
-}
 
 export async function transcribeAudio(
   audioBuffer: Buffer,
   fileName: string,
   language = "ru"
 ): Promise<TranscriptionResult> {
-  // Prefer the original file extension — Whisper validates by filename
   const origExt = fileName.split(".").pop()?.toLowerCase() ?? "";
-  let ext = WHISPER_NATIVE_EXTS.has(origExt) ? origExt : detectAudioExt(audioBuffer, fileName);
-
-  // If still not a Whisper-supported format, default to mp3
-  if (!WHISPER_NATIVE_EXTS.has(ext)) {
-    ext = "mp3";
-  }
+  const ext = WHISPER_NATIVE_EXTS.has(origExt) ? origExt : "mp3";
 
   const mimeMap: Record<string, string> = {
     mp3: "audio/mpeg", mp4: "audio/mp4", m4a: "audio/mp4",
@@ -58,18 +31,46 @@ export async function transcribeAudio(
     webm: "audio/webm", mpeg: "audio/mpeg", mpga: "audio/mpeg", oga: "audio/ogg",
   };
   const mime = mimeMap[ext] ?? "audio/mpeg";
-
-  // Use original filename if it has a valid extension, otherwise construct one
   const uploadName = WHISPER_NATIVE_EXTS.has(origExt) ? fileName : `audio.${ext}`;
-  const file = await toFile(audioBuffer, uploadName, { type: mime });
 
-  const transcription = await openai.audio.transcriptions.create({
-    file,
-    model: "whisper-1",
-    language,
-    response_format: "verbose_json",
-    timestamp_granularities: ["segment"],
-  });
+  // If proxy is configured, use dedicated transcribe endpoint (avoids multipart proxy issues)
+  const proxyUrl = process.env.OPENAI_PROXY_URL;
+  const proxySecret = process.env.OPENAI_PROXY_SECRET;
+
+  let transcription;
+
+  if (proxyUrl && proxySecret) {
+    // Send audio directly to Vercel endpoint which calls Whisper with its own SDK
+    const form = new FormData();
+    const blob = new Blob([audioBuffer], { type: mime });
+    form.append("file", blob, uploadName);
+    form.append("model", "whisper-1");
+    form.append("language", language);
+    form.append("response_format", "verbose_json");
+
+    const res = await fetch(`${proxyUrl}/api/transcribe-proxy`, {
+      method: "POST",
+      headers: { "x-proxy-secret": proxySecret },
+      body: form,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      throw new Error(err.error ?? `Transcription proxy error: ${res.status}`);
+    }
+
+    transcription = await res.json();
+  } else {
+    // Direct call (no proxy needed)
+    const file = await toFile(audioBuffer, uploadName, { type: mime });
+    transcription = await openai.audio.transcriptions.create({
+      file,
+      model: "whisper-1",
+      language,
+      response_format: "verbose_json",
+      timestamp_granularities: ["segment"],
+    });
+  }
 
   const processedSegments = processSegmentsWithSpeakers(
     transcription.segments ?? []
@@ -159,4 +160,4 @@ export const ALLOWED_AUDIO_TYPES = [
   "video/webm",
 ];
 
-export const MAX_AUDIO_SIZE = 100 * 1024 * 1024; // 100 MB
+export const MAX_AUDIO_SIZE = 100 * 1024 * 1024;
