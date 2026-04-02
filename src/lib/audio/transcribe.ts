@@ -1,5 +1,12 @@
-import { toFile } from "openai";
 import { openai } from "@/lib/openai-client";
+import { toFile } from "openai";
+import { writeFile, readFile, unlink } from "fs/promises";
+import { execFile } from "child_process";
+import { promisify } from "util";
+import path from "path";
+import os from "os";
+
+const execFileAsync = promisify(execFile);
 
 export interface TranscriptionResult {
   text: string;
@@ -17,13 +24,48 @@ const WHISPER_NATIVE_EXTS = new Set([
   "mp3", "mp4", "m4a", "wav", "ogg", "flac", "webm", "mpeg", "mpga", "oga",
 ]);
 
+function needsConversion(buffer: Buffer): boolean {
+  // AAC ADTS (raw AAC without MP4 container) — Whisper can't handle this
+  if (buffer[0] === 0xff && (buffer[1] & 0xf0) === 0xf0) return true;
+  if (buffer[0] === 0xff && (buffer[1] & 0xf6) === 0xf0) return true;
+  return false;
+}
+
+async function convertToMp3(inputPath: string, outputPath: string): Promise<void> {
+  await execFileAsync("ffmpeg", [
+    "-y", "-i", inputPath,
+    "-vn", "-ar", "16000", "-ac", "1", "-b:a", "64k",
+    "-f", "mp3", outputPath,
+  ], { timeout: 120_000 });
+}
+
 export async function transcribeAudio(
   audioBuffer: Buffer,
   fileName: string,
   language = "ru"
 ): Promise<TranscriptionResult> {
   const origExt = fileName.split(".").pop()?.toLowerCase() ?? "";
-  const ext = WHISPER_NATIVE_EXTS.has(origExt) ? origExt : "mp3";
+  let ext = WHISPER_NATIVE_EXTS.has(origExt) ? origExt : "mp3";
+  let finalBuffer = audioBuffer;
+  let finalName = WHISPER_NATIVE_EXTS.has(origExt) ? fileName : `audio.${ext}`;
+
+  // Convert raw AAC or unsupported formats to MP3 via ffmpeg
+  if (needsConversion(audioBuffer)) {
+    console.log(`[TRANSCRIBE] Converting ${fileName} (raw AAC) to MP3 via ffmpeg`);
+    const tmpIn = path.join(os.tmpdir(), `in_${Date.now()}.${origExt || "aac"}`);
+    const tmpOut = path.join(os.tmpdir(), `out_${Date.now()}.mp3`);
+    try {
+      await writeFile(tmpIn, audioBuffer);
+      await convertToMp3(tmpIn, tmpOut);
+      finalBuffer = await readFile(tmpOut);
+      ext = "mp3";
+      finalName = fileName.replace(/\.[^.]+$/, ".mp3");
+      console.log(`[TRANSCRIBE] Converted: ${finalBuffer.length} bytes`);
+    } finally {
+      await unlink(tmpIn).catch(() => {});
+      await unlink(tmpOut).catch(() => {});
+    }
+  }
 
   const mimeMap: Record<string, string> = {
     mp3: "audio/mpeg", mp4: "audio/mp4", m4a: "audio/mp4",
@@ -31,22 +73,19 @@ export async function transcribeAudio(
     webm: "audio/webm", mpeg: "audio/mpeg", mpga: "audio/mpeg", oga: "audio/ogg",
   };
   const mime = mimeMap[ext] ?? "audio/mpeg";
-  const uploadName = WHISPER_NATIVE_EXTS.has(origExt) ? fileName : `audio.${ext}`;
 
-  // If proxy is configured, use dedicated transcribe endpoint (avoids multipart proxy issues)
+  // If proxy is configured, use dedicated transcribe endpoint on Vercel
   const proxyUrl = process.env.OPENAI_PROXY_URL;
   const proxySecret = process.env.OPENAI_PROXY_SECRET;
 
   let transcription;
 
   if (proxyUrl && proxySecret) {
-    // Send audio directly to Vercel endpoint which calls Whisper with its own SDK
-    console.log(`[TRANSCRIBE] Proxy mode: sending ${uploadName} (${audioBuffer.length} bytes, ext=${ext}, mime=${mime}) to ${proxyUrl}/api/transcribe-proxy`);
-    console.log(`[TRANSCRIBE] First 16 bytes:`, Array.from(audioBuffer.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+    console.log(`[TRANSCRIBE] Sending ${finalName} (${finalBuffer.length} bytes) via proxy`);
     const form = new FormData();
-    const blob = new Blob([audioBuffer], { type: mime });
-    form.append("file", blob, uploadName);
-    form.append("fileName", uploadName);
+    const blob = new Blob([finalBuffer], { type: mime });
+    form.append("file", blob, finalName);
+    form.append("fileName", finalName);
     form.append("model", "whisper-1");
     form.append("language", language);
     form.append("response_format", "verbose_json");
@@ -59,13 +98,13 @@ export async function transcribeAudio(
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-      throw new Error(err.error ?? `Transcription proxy error: ${res.status}`);
+      throw new Error(err.error ?? `Proxy error: ${res.status}`);
     }
 
     transcription = await res.json();
   } else {
-    // Direct call (no proxy needed)
-    const file = await toFile(audioBuffer, uploadName, { type: mime });
+    // Direct call
+    const file = await toFile(finalBuffer, finalName, { type: mime });
     transcription = await openai.audio.transcriptions.create({
       file,
       model: "whisper-1",
@@ -75,9 +114,7 @@ export async function transcribeAudio(
     });
   }
 
-  const processedSegments = processSegmentsWithSpeakers(
-    transcription.segments ?? []
-  );
+  const processedSegments = processSegmentsWithSpeakers(transcription.segments ?? []);
 
   return {
     text: transcription.text,
@@ -103,14 +140,10 @@ function processSegmentsWithSpeakers(
 
   return segments.map((segment) => {
     const gap = segment.start - previousEnd;
-
     if (gap > 0.5 && previousEnd > 0) {
-      currentSpeaker =
-        currentSpeaker === "Администратор" ? "Клиент" : "Администратор";
+      currentSpeaker = currentSpeaker === "Администратор" ? "Клиент" : "Администратор";
     }
-
     previousEnd = segment.end;
-
     return {
       id: segment.id,
       start: segment.start,
@@ -121,12 +154,8 @@ function processSegmentsWithSpeakers(
   });
 }
 
-export function formatTranscriptionForAnalysis(
-  result: TranscriptionResult
-): string {
-  if (!result.segments?.length) {
-    return result.text;
-  }
+export function formatTranscriptionForAnalysis(result: TranscriptionResult): string {
+  if (!result.segments?.length) return result.text;
 
   let formatted = "";
   let currentSpeaker = "";
@@ -136,7 +165,6 @@ export function formatTranscriptionForAnalysis(
       currentSpeaker = segment.speaker ?? "Спикер";
       formatted += `\n[${currentSpeaker}]: `;
     }
-
     const timecode = formatTimecode(segment.start);
     formatted += `[${timecode}] ${segment.text.trim()} `;
   }
@@ -151,16 +179,9 @@ function formatTimecode(seconds: number): string {
 }
 
 export const ALLOWED_AUDIO_TYPES = [
-  "audio/mpeg",
-  "audio/mp3",
-  "audio/wav",
-  "audio/x-wav",
-  "audio/ogg",
-  "audio/mp4",
-  "audio/x-m4a",
-  "audio/aac",
-  "audio/webm",
-  "video/webm",
+  "audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav",
+  "audio/ogg", "audio/mp4", "audio/x-m4a", "audio/aac",
+  "audio/webm", "video/webm",
 ];
 
 export const MAX_AUDIO_SIZE = 100 * 1024 * 1024;
