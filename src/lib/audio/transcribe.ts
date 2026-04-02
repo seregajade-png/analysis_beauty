@@ -43,12 +43,13 @@ export async function transcribeAudio(
   fileName: string,
   language = "ru"
 ): Promise<TranscriptionResult> {
-  let ext = detectAudioExt(audioBuffer, fileName);
+  // Prefer the original file extension — Whisper validates by filename
+  const origExt = fileName.split(".").pop()?.toLowerCase() ?? "";
+  let ext = WHISPER_NATIVE_EXTS.has(origExt) ? origExt : detectAudioExt(audioBuffer, fileName);
 
-  // If format is not natively supported by Whisper, try sending as-is
-  // (Whisper often handles raw AAC in practice)
+  // If still not a Whisper-supported format, default to mp3
   if (!WHISPER_NATIVE_EXTS.has(ext)) {
-    ext = "mp3"; // Label it as mp3 — Whisper is forgiving
+    ext = "mp3";
   }
 
   const mimeMap: Record<string, string> = {
@@ -58,7 +59,9 @@ export async function transcribeAudio(
   };
   const mime = mimeMap[ext] ?? "audio/mpeg";
 
-  const file = await toFile(audioBuffer, `audio.${ext}`, { type: mime });
+  // Use original filename if it has a valid extension, otherwise construct one
+  const uploadName = WHISPER_NATIVE_EXTS.has(origExt) ? fileName : `audio.${ext}`;
+  const file = await toFile(audioBuffer, uploadName, { type: mime });
 
   const transcription = await openai.audio.transcriptions.create({
     file,
