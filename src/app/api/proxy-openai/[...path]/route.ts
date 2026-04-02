@@ -34,11 +34,15 @@ export async function POST(
 
     let body: BodyInit;
     if (isMultipart) {
-      // Forward FormData as-is (for Whisper audio uploads)
+      // Forward FormData — explicitly preserve filenames for Whisper
       const formData = await req.formData();
       const newForm = new FormData();
       for (const [key, value] of formData.entries()) {
-        newForm.append(key, value);
+        if (value instanceof File) {
+          newForm.append(key, value, value.name);
+        } else {
+          newForm.append(key, value);
+        }
       }
       body = newForm;
     } else {
