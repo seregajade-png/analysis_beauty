@@ -41,6 +41,8 @@ export async function transcribeAudio(
 
   if (proxyUrl && proxySecret) {
     // Send audio directly to Vercel endpoint which calls Whisper with its own SDK
+    console.log(`[TRANSCRIBE] Proxy mode: sending ${uploadName} (${audioBuffer.length} bytes, ext=${ext}, mime=${mime}) to ${proxyUrl}/api/transcribe-proxy`);
+    console.log(`[TRANSCRIBE] First 16 bytes:`, Array.from(audioBuffer.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '));
     const form = new FormData();
     const blob = new Blob([audioBuffer], { type: mime });
     form.append("file", blob, uploadName);
