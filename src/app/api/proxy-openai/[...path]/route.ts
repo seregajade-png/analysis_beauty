@@ -22,26 +22,34 @@ export async function POST(
   const targetUrl = `https://api.openai.com/${path}`;
 
   try {
-    // Forward raw body as-is — no FormData parsing, no corruption
-    const rawBody = await req.arrayBuffer();
+    const contentType = req.headers.get("content-type") ?? "";
+    const isMultipart = contentType.includes("multipart");
 
     const headers: Record<string, string> = {
       Authorization: `Bearer ${apiKey}`,
     };
 
-    // Preserve Content-Type (includes multipart boundary)
-    const ct = req.headers.get("content-type");
-    if (ct) headers["Content-Type"] = ct;
+    let body: BodyInit;
+
+    if (isMultipart) {
+      // For multipart (Whisper audio) — forward raw bytes to preserve binary data
+      headers["Content-Type"] = contentType;
+      body = Buffer.from(await req.arrayBuffer());
+    } else {
+      // For JSON (chat completions, etc.) — forward as text
+      headers["Content-Type"] = "application/json";
+      body = await req.text();
+    }
 
     const response = await fetch(targetUrl, {
       method: "POST",
       headers,
-      body: rawBody,
+      body,
     });
 
-    const data = await response.arrayBuffer();
+    const responseData = await response.text();
 
-    return new NextResponse(data, {
+    return new NextResponse(responseData, {
       status: response.status,
       headers: { "Content-Type": response.headers.get("content-type") ?? "application/json" },
     });
