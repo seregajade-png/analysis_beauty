@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 
 const PROXY_SECRET = process.env.NEXTAUTH_SECRET;
 
@@ -18,14 +18,33 @@ export async function POST(req: NextRequest) {
 
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    const rawFile = formData.get("file");
     const model = (formData.get("model") as string) ?? "whisper-1";
     const language = (formData.get("language") as string) ?? "ru";
     const responseFormat = (formData.get("response_format") as string) ?? "verbose_json";
+    const fileNameHint = (formData.get("fileName") as string) ?? "";
 
-    if (!file) {
+    if (!rawFile || !(rawFile instanceof Blob)) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
+
+    // Debug: log what we received
+    const receivedName = rawFile instanceof File ? rawFile.name : "blob";
+    const receivedSize = rawFile.size;
+    const receivedType = rawFile.type;
+    console.log(`[TRANSCRIBE-PROXY] name=${receivedName} hint=${fileNameHint} size=${receivedSize} type=${receivedType}`);
+
+    // Determine filename: prefer hint, then File.name, then fallback
+    let fileName = fileNameHint || receivedName;
+    if (!fileName || fileName === "blob" || fileName === "undefined") {
+      fileName = "audio.mp3";
+    }
+
+    // Read as buffer and create file with explicit name using OpenAI's toFile
+    const buffer = Buffer.from(await rawFile.arrayBuffer());
+    const file = await toFile(buffer, fileName, { type: receivedType || "audio/mpeg" });
+
+    console.log(`[TRANSCRIBE-PROXY] Sending to Whisper: ${fileName} (${buffer.length} bytes)`);
 
     const openai = new OpenAI({ apiKey });
 
@@ -40,6 +59,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(transcription);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
+    console.error(`[TRANSCRIBE-PROXY] Error:`, msg);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

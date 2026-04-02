@@ -44,6 +44,7 @@ export async function transcribeAudio(
     const form = new FormData();
     const blob = new Blob([audioBuffer], { type: mime });
     form.append("file", blob, uploadName);
+    form.append("fileName", uploadName);
     form.append("model", "whisper-1");
     form.append("language", language);
     form.append("response_format", "verbose_json");
