@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PROXY_SECRET = process.env.NEXTAUTH_SECRET;
 
-export const maxDuration = 300; // 5 minutes for long transcriptions
+export const maxDuration = 300;
 
 export async function POST(
   req: NextRequest,
@@ -15,58 +15,37 @@ export async function POST(
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return NextResponse.json(
-      { error: "OPENAI_API_KEY not configured" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "OPENAI_API_KEY not configured" }, { status: 500 });
   }
 
   const path = params.path.join("/");
   const targetUrl = `https://api.openai.com/${path}`;
 
   try {
-    const contentType = req.headers.get("content-type") ?? "";
-    const isMultipart = contentType.includes("multipart/form-data");
+    // Forward raw body as-is — no FormData parsing, no corruption
+    const rawBody = await req.arrayBuffer();
 
     const headers: Record<string, string> = {
       Authorization: `Bearer ${apiKey}`,
     };
 
-    let body: BodyInit;
-    if (isMultipart) {
-      // Forward FormData — explicitly preserve filenames for Whisper
-      const formData = await req.formData();
-      const newForm = new FormData();
-      for (const [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          newForm.append(key, value, value.name);
-        } else {
-          newForm.append(key, value);
-        }
-      }
-      body = newForm;
-    } else {
-      headers["Content-Type"] = "application/json";
-      body = await req.text();
-    }
+    // Preserve Content-Type (includes multipart boundary)
+    const ct = req.headers.get("content-type");
+    if (ct) headers["Content-Type"] = ct;
 
     const response = await fetch(targetUrl, {
       method: "POST",
       headers,
-      body,
+      body: rawBody,
     });
 
-    const data = await response.text();
+    const data = await response.arrayBuffer();
 
     return new NextResponse(data, {
       status: response.status,
       headers: { "Content-Type": response.headers.get("content-type") ?? "application/json" },
     });
   } catch (error) {
-    console.error("[PROXY-OPENAI] Error:", error);
-    return NextResponse.json(
-      { error: "Proxy error: " + String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Proxy error" }, { status: 500 });
   }
 }
