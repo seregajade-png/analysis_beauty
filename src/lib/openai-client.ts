@@ -1,8 +1,12 @@
 import OpenAI from "openai";
 
 const PROXY_URL = process.env.OPENAI_PROXY_URL;
+const PROXY_SECRET = process.env.OPENAI_PROXY_SECRET;
 
 export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: PROXY_URL ? `${PROXY_URL}/v1` : undefined,
+  apiKey: PROXY_URL ? "proxy" : process.env.OPENAI_API_KEY,
+  baseURL: PROXY_URL ? `${PROXY_URL}/api/proxy-openai/v1` : undefined,
+  defaultHeaders: PROXY_URL && PROXY_SECRET
+    ? { "x-proxy-secret": PROXY_SECRET }
+    : undefined,
 });
