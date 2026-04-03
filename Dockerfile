@@ -16,6 +16,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG OPENAI_API_KEY=sk-dummy-build-key
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
 RUN npx prisma generate && npm run build
 
 # Production image
