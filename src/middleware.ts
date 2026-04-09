@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { decode } from "next-auth/jwt";
 
-const publicRoutes = ["/login", "/register", "/api/auth", "/api/login", "/api/register", "/api/proxy-openai", "/api/transcribe-proxy"];
+const publicRoutes = ["/login", "/register", "/api/auth", "/api/login", "/api/register", "/api/proxy-openai", "/api/transcribe-proxy", "/api/payment/prodamus"];
 
 const COOKIE_NAMES = [
   "__Secure-authjs.session-token",

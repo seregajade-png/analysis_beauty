@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getAccessInfo, SUBSCRIPTION_PRICE_RUB } from "@/lib/subscription";
+import { buildProdamusPaymentUrl } from "@/lib/prodamus";
 
 // Получить статус подписки и историю заявок
 export async function GET() {
@@ -25,7 +26,7 @@ export async function GET() {
   });
 }
 
-// Создать заявку на оплату
+// Создать заявку на оплату + ссылку Prodamus
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) {
@@ -35,19 +36,44 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const months = Math.max(1, Math.min(12, Number(body.months ?? 1)));
-    const note = String(body.note ?? "").slice(0, 500);
 
-    const request = await prisma.paymentRequest.create({
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true, phone: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "Пользователь не найден" }, { status: 404 });
+    }
+
+    const amount = SUBSCRIPTION_PRICE_RUB * months;
+
+    const paymentRequest = await prisma.paymentRequest.create({
       data: {
         userId: session.user.id,
-        amount: SUBSCRIPTION_PRICE_RUB * months,
+        amount,
         months,
-        note: note || null,
         status: "PENDING",
       },
     });
 
-    return NextResponse.json({ success: true, request });
+    // Генерируем ссылку на оплату Prodamus
+    const baseUrl = process.env.NEXTAUTH_URL ?? "https://beauty.natolisova.ru";
+    const paymentUrl = buildProdamusPaymentUrl({
+      orderId: paymentRequest.id,
+      amount,
+      description: `BeautyChief — подписка ${months} мес.`,
+      customerEmail: user.email,
+      customerPhone: user.phone ?? undefined,
+      successUrl: `${baseUrl}/subscription?paid=1`,
+      webhookUrl: `${baseUrl}/api/payment/prodamus`,
+    });
+
+    return NextResponse.json({
+      success: true,
+      request: paymentRequest,
+      paymentUrl,
+    });
   } catch (error) {
     console.error("[SUBSCRIPTION] Error:", error);
     return NextResponse.json({ error: "Ошибка создания заявки" }, { status: 500 });

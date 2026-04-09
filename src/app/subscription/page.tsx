@@ -52,6 +52,12 @@ export default function SubscriptionPage() {
         body: JSON.stringify({ months }),
       });
       if (res.ok) {
+        const data = await res.json();
+        if (data.paymentUrl) {
+          // Перенаправляем на Prodamus
+          window.location.href = data.paymentUrl;
+          return;
+        }
         setShowInstructions(true);
         await load();
       }
