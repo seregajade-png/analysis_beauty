@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 function LoginForm() {
   const params = useSearchParams();
@@ -104,6 +105,15 @@ function LoginForm() {
               {loading ? "Вход..." : "Войти"}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Нет аккаунта?{" "}
+              <Link href="/register" className="text-primary font-medium hover:underline">
+                Зарегистрироваться
+              </Link>
+            </p>
+          </div>
 
           <div className="mt-6 pt-5 border-t border-border">
             <p className="text-xs text-muted-foreground text-center mb-3">

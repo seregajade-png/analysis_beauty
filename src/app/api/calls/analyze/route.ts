@@ -8,6 +8,7 @@ import {
   MAX_AUDIO_SIZE,
 } from "@/lib/audio/transcribe";
 import { analyzeCall } from "@/lib/ai/analyzer";
+import { checkAndIncrementUsage } from "@/lib/subscription";
 
 export const maxDuration = 300; // 5 minutes for long audio
 
@@ -77,6 +78,15 @@ async function handleFullAnalysis(
     return NextResponse.json(
       { error: "Файл слишком большой. Максимум 100 МБ" },
       { status: 400 }
+    );
+  }
+
+  // Check quota
+  const quota = await checkAndIncrementUsage(userId, "calls");
+  if (!quota.allowed) {
+    return NextResponse.json(
+      { error: quota.reason ?? "Лимит превышен", quotaExceeded: true },
+      { status: 403 }
     );
   }
 

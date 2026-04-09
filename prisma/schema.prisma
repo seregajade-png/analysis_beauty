@@ -17,6 +17,12 @@ enum UserRole {
   ADMIN    // Тестируемый администратор
 }
 
+enum SubscriptionStatus {
+  TRIAL    // Бесплатный пробный период
+  ACTIVE   // Активная платная подписка
+  EXPIRED  // Подписка/триал истёк
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -24,9 +30,15 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  role          UserRole  @default(ADMIN)
+  role          UserRole  @default(OWNER)
   salonName     String?
   phone         String?
+
+  // Подписка
+  subscriptionStatus SubscriptionStatus @default(TRIAL)
+  trialEndsAt        DateTime?
+  subscriptionEndsAt DateTime?
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -45,8 +57,48 @@ model User {
   testResults    TestResult[]
   adminCards     AdminCard[]
   salonSettings  SalonSettings?
+  dailyUsages    DailyUsage[]
+  paymentRequests PaymentRequest[]
 
   @@map("users")
+}
+
+// Дневная статистика использования
+model DailyUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  callsCount Int     @default(0)
+  chatsCount Int     @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("daily_usages")
+}
+
+enum PaymentStatus {
+  PENDING    // Ожидает подтверждения
+  CONFIRMED  // Подтверждено админом, подписка активирована
+  REJECTED   // Отклонено
+}
+
+// Заявки на оплату (заглушка вместо реальной платёжной системы)
+model PaymentRequest {
+  id        String        @id @default(cuid())
+  userId    String
+  amount    Float
+  months    Int           @default(1)
+  status    PaymentStatus @default(PENDING)
+  note      String?       @db.Text
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payment_requests")
 }
 
 model Account {
