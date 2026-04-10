@@ -114,13 +114,9 @@ export function buildProdamusPaymentUrl(params: ProdamusPaymentParams): string {
     flat.customer_phone = params.customerPhone;
   }
 
-  // Convert to nested dict, sign, and add signature
-  const nested = phpToDict(flat);
-  const signature = signProdamus(nested);
-
-  // Build query string with all flat params + signature
-  const allParams = { ...flat, signature };
-  const query = Object.entries(allParams)
+  // Build query string — Prodamus does NOT require signature for payment links
+  // Signature is only used for webhook verification
+  const query = Object.entries(flat)
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
     .join("&");
 
